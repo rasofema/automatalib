@@ -22,13 +22,13 @@ import java.util.Map;
 import java.util.Objects;
 
 import net.automatalib.alphabet.Alphabet;
-import net.automatalib.incremental.mealy.AdaptiveMealyBuilder;
+import net.automatalib.incremental.AdaptiveConstruction;
 import net.automatalib.util.graph.traversal.GraphTraversal;
 import net.automatalib.word.Word;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class AdaptiveMealyTreeBuilder<I, O> extends AbstractAlphabetBasedMealyTreeBuilder<I, O>
-        implements AdaptiveMealyBuilder<I, O> {
+        implements AdaptiveConstruction.MealyBuilder<I, O> {
 
     private final Map<Node<O>, Word<I>> nodeToQuery;
 
@@ -38,7 +38,7 @@ public class AdaptiveMealyTreeBuilder<I, O> extends AbstractAlphabetBasedMealyTr
     }
 
     @Override
-    public boolean insert(Word<? extends I> input, Word<? extends O> outputWord) {
+    public boolean insert(Word<? extends I> input, Word<O> outputWord) {
         Node<O> curr = root;
         boolean hasOverwritten = false;
 

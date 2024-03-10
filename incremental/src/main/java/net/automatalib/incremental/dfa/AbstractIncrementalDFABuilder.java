@@ -17,6 +17,7 @@ package net.automatalib.incremental.dfa;
 
 import net.automatalib.alphabet.Alphabet;
 import net.automatalib.automaton.concept.InputAlphabetHolder;
+import net.automatalib.incremental.IncrementalConstruction;
 
 /**
  * Abstract base class for {@link IncrementalDFABuilder}s. This class takes care of holding the input alphabet and its
@@ -25,7 +26,8 @@ import net.automatalib.automaton.concept.InputAlphabetHolder;
  * @param <I>
  *         input symbol class
  */
-public abstract class AbstractIncrementalDFABuilder<I> implements IncrementalDFABuilder<I>, InputAlphabetHolder<I> {
+public abstract class AbstractIncrementalDFABuilder<I>
+        implements IncrementalConstruction.DFABuilder<I>, InputAlphabetHolder<I> {
 
     protected final Alphabet<I> inputAlphabet;
     protected int alphabetSize;

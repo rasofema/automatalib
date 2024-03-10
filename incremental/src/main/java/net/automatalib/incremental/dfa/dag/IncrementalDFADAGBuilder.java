@@ -20,6 +20,7 @@ import java.util.Deque;
 import java.util.Iterator;
 
 import net.automatalib.alphabet.Alphabet;
+import net.automatalib.common.util.Pair;
 import net.automatalib.incremental.ConflictException;
 import net.automatalib.incremental.dfa.Acceptance;
 import net.automatalib.word.Word;
@@ -56,12 +57,14 @@ public class IncrementalDFADAGBuilder<I> extends AbstractIncrementalDFADAGBuilde
      * @return the acceptance status for the given word
      */
     @Override
-    public Acceptance lookup(Word<? extends I> word) {
+    public Pair<Boolean, Boolean> lookup(Word<? extends I> word) {
         State s = getState(word);
         if (s == null) {
-            return Acceptance.DONT_KNOW;
+            return Pair.of(false, null);
         }
-        return s.getAcceptance();
+
+        Boolean out = s.getAcceptance() == Acceptance.DONT_KNOW ? null : s.getAcceptance().toBoolean();
+        return Pair.of(out != null, out);
     }
 
     /**
@@ -73,7 +76,7 @@ public class IncrementalDFADAGBuilder<I> extends AbstractIncrementalDFADAGBuilde
      *         whether to insert this word into the set of accepted or rejected words.
      */
     @Override
-    public void insert(Word<? extends I> word, boolean accepting) {
+    public void insert(Word<? extends I> word, Boolean accepting) {
         int len = word.length();
         Acceptance acc = Acceptance.fromBoolean(accepting);
 

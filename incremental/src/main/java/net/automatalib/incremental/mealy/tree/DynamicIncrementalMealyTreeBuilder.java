@@ -24,7 +24,7 @@ import java.util.Objects;
 import net.automatalib.common.util.collection.IteratorUtil;
 import net.automatalib.graph.Graph;
 import net.automatalib.incremental.ConflictException;
-import net.automatalib.incremental.mealy.IncrementalMealyBuilder;
+import net.automatalib.incremental.IncrementalConstruction;
 import net.automatalib.util.graph.traversal.GraphTraversal;
 import net.automatalib.visualization.DefaultVisualizationHelper;
 import net.automatalib.visualization.VisualizationHelper;
@@ -45,14 +45,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *         output symbol type
  */
 public class DynamicIncrementalMealyTreeBuilder<I, O> extends AbstractMealyTreeBuilder<DynamicNode<I, O>, I, O>
-        implements IncrementalMealyBuilder<I, O> {
+        implements IncrementalConstruction.MealyBuilder<I, O> {
 
     public DynamicIncrementalMealyTreeBuilder() {
         super(new DynamicNode<>());
     }
 
     @Override
-    public void insert(Word<? extends I> input, Word<? extends O> outputWord) {
+    public void insert(Word<? extends I> input, Word<O> outputWord) {
         DynamicNode<I, O> curr = root;
 
         for (int i = 0; i < input.length(); i++) {

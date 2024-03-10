@@ -19,18 +19,18 @@ import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Objects;
 
 import net.automatalib.automaton.transducer.MealyMachine;
-import net.automatalib.incremental.mealy.MealyBuilder;
+import net.automatalib.common.util.Pair;
+import net.automatalib.incremental.Construction;
 import net.automatalib.ts.output.MealyTransitionSystem;
 import net.automatalib.word.Word;
 import net.automatalib.word.WordBuilder;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-abstract class AbstractMealyTreeBuilder<N, I, O> implements MealyBuilder<I, O> {
+abstract class AbstractMealyTreeBuilder<N, I, O> implements Construction.MealyBuilder<I, O> {
 
     final N root;
 
@@ -38,20 +38,20 @@ abstract class AbstractMealyTreeBuilder<N, I, O> implements MealyBuilder<I, O> {
         this.root = root;
     }
 
-    @Override
-    public boolean lookup(Word<? extends I> word, List<? super O> output) {
+    public Pair<Boolean, Word<O>> lookup(Word<? extends I> input) {
+        WordBuilder<O> wb = new WordBuilder<>();
         N curr = root;
 
-        for (I sym : word) {
+        for (I sym : input) {
             Edge<N, O> edge = getEdge(curr, sym);
             if (edge == null) {
-                return false;
+                return Pair.of(false, wb.toWord());
             }
-            output.add(edge.getOutput());
+            wb.add(edge.getOutput());
             curr = edge.getTarget();
         }
 
-        return true;
+        return Pair.of(true, wb.toWord());
     }
 
     @Override

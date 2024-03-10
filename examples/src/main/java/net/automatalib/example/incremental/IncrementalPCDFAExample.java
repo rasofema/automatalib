@@ -17,7 +17,7 @@ package net.automatalib.example.incremental;
 
 import net.automatalib.alphabet.Alphabet;
 import net.automatalib.alphabet.impl.Alphabets;
-import net.automatalib.incremental.dfa.IncrementalDFABuilder;
+import net.automatalib.incremental.IncrementalConstruction;
 import net.automatalib.incremental.dfa.dag.IncrementalPCDFADAGBuilder;
 import net.automatalib.incremental.dfa.tree.IncrementalPCDFATreeBuilder;
 import net.automatalib.visualization.Visualization;
@@ -34,15 +34,15 @@ public final class IncrementalPCDFAExample {
 
     public static void main(String[] args) {
         LOGGER.info("Incremental construction using a tree");
-        IncrementalDFABuilder<Character> incPcDfaTree = new IncrementalPCDFATreeBuilder<>(ALPHABET);
+        IncrementalConstruction.DFABuilder<Character> incPcDfaTree = new IncrementalPCDFATreeBuilder<>(ALPHABET);
         build(incPcDfaTree);
 
         LOGGER.info("Incremental construction using a DAG");
-        IncrementalDFABuilder<Character> incPcDfaDag = new IncrementalPCDFADAGBuilder<>(ALPHABET);
+        IncrementalConstruction.DFABuilder<Character> incPcDfaDag = new IncrementalPCDFADAGBuilder<>(ALPHABET);
         build(incPcDfaDag);
     }
 
-    public static void build(IncrementalDFABuilder<Character> incPcDfa) {
+    public static void build(IncrementalConstruction.DFABuilder<Character> incPcDfa) {
         Word<Character> w1 = Word.fromString("abc");
         Word<Character> w2 = Word.fromString("acb");
         Word<Character> w3 = Word.fromString("ac");

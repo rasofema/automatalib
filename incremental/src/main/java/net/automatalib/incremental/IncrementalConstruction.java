@@ -15,64 +15,51 @@
  */
 package net.automatalib.incremental;
 
-import java.util.Collection;
-
-import net.automatalib.graph.Graph;
-import net.automatalib.ts.DeterministicTransitionSystem;
+import net.automatalib.automaton.concept.Output;
+import net.automatalib.automaton.fsa.DFA;
+import net.automatalib.automaton.transducer.MealyMachine;
+import net.automatalib.automaton.transducer.MooreMachine;
 import net.automatalib.word.Word;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Basic interface for incremental automata constructions. An incremental automaton construction creates an (acyclic)
- * automaton by iterated insertion of example words.
+ * Basic interface for incremental automata constructions. An incremental
+ * automaton construction creates an (acyclic)
+ * automaton by iterated insertion of non-conflicting example words.
  *
  * @param <A>
- *         the automaton model which is constructed
+ *            the automaton model which is constructed
  * @param <I>
- *         input symbol class
+ *            input symbol class
+ * @param <D>
+ *            output domain class
  */
-public interface IncrementalConstruction<A, I> {
+public interface IncrementalConstruction<M extends Output<I, D>, I, D> extends Construction<M, I, D> {
 
-    /**
-     * Checks the current state of the construction against a given target model, and returns a word exposing a
-     * difference if there is one.
-     *
-     * @param target
-     *         the target automaton model
-     * @param inputs
-     *         the set of input symbols to consider
-     * @param omitUndefined
-     *         if this is set to {@code true}, then undefined transitions in the {@code target} model will be
-     *         interpreted as "unspecified/don't know" and omitted in the equivalence test. Otherwise, they will be
-     *         interpreted in the usual manner (e.g., non-accepting sink in case of DFAs).
-     *
-     * @return a separating word, or {@code null} if no difference could be found.
-     */
-    @Nullable Word<I> findSeparatingWord(A target, Collection<? extends I> inputs, boolean omitUndefined);
+    void insert(Word<? extends I> input, D output) throws ConflictException;
 
-    /**
-     * Checks whether this class has definitive information about a given word.
-     *
-     * @param word
-     *         the word
-     *
-     * @return {@code true} if this class has definitive information about the word, {@code false} otherwise.
-     */
-    boolean hasDefinitiveInformation(Word<? extends I> word);
+    interface MealyBuilder<I, O> extends IncrementalConstruction<MealyMachine<?, I, ?, O>, I, Word<O>> {
+    }
 
-    /**
-     * Retrieves a <i>graph view</i> of the current state of the construction. The graph model should be backed by the
-     * construction, i.e., subsequent changes will be reflected in the graph model.
-     *
-     * @return a graph view on the current state of the construction
-     */
-    Graph<?, ?> asGraph();
+    interface DFABuilder<I> extends IncrementalConstruction<DFA<?, I>, I, Boolean> {
+        /**
+         * Inserts a new word into the automaton. This is a convenience method
+         * equivalent to invoking {@code insert(word,
+         * true)}.
+         *
+         * @param word
+         *             the word to insert
+         *
+         * @throws ConflictException
+         *                           if the newly provided information conflicts with
+         *                           existing information
+         * @see #insert(Word, boolean)
+         */
+        default void insert(Word<? extends I> word) {
+            insert(word, true);
+        }
 
-    /**
-     * Retrieves a <i>transition system view</i> of the current state of the construction. The transition system model
-     * should be backed by the construction, i.e., subsequent changes will be reflected in the transition system.
-     *
-     * @return a transition system view on the current state of the construction
-     */
-    DeterministicTransitionSystem<?, I, ?> asTransitionSystem();
+    }
+
+    interface MooreBuilder<I, O> extends IncrementalConstruction<MooreMachine<?, I, ?, O>, I, Word<O>> {
+    }
 }

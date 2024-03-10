@@ -17,7 +17,7 @@ package net.automatalib.example.incremental;
 
 import net.automatalib.alphabet.Alphabet;
 import net.automatalib.alphabet.impl.Alphabets;
-import net.automatalib.incremental.mealy.IncrementalMealyBuilder;
+import net.automatalib.incremental.IncrementalConstruction;
 import net.automatalib.incremental.mealy.dag.IncrementalMealyDAGBuilder;
 import net.automatalib.incremental.mealy.tree.IncrementalMealyTreeBuilder;
 import net.automatalib.visualization.Visualization;
@@ -41,15 +41,17 @@ public final class IncrementalMealyExample {
 
     public static void main(String[] args) {
         LOGGER.info("Incremental construction using a tree");
-        IncrementalMealyBuilder<Character, Character> incMealyTree = new IncrementalMealyTreeBuilder<>(ALPHABET);
+        IncrementalConstruction.MealyBuilder<Character, Character> incMealyTree = new IncrementalMealyTreeBuilder<>(
+                ALPHABET);
         build(incMealyTree);
 
         LOGGER.info("Incremental construction using a DAG");
-        IncrementalMealyBuilder<Character, Character> incMealyDag = new IncrementalMealyDAGBuilder<>(ALPHABET);
+        IncrementalConstruction.MealyBuilder<Character, Character> incMealyDag = new IncrementalMealyDAGBuilder<>(
+                ALPHABET);
         build(incMealyDag);
     }
 
-    public static void build(IncrementalMealyBuilder<Character, Character> incMealy) {
+    public static void build(IncrementalConstruction.MealyBuilder<Character, Character> incMealy) {
         LOGGER.info("  Inserting {} / {}", W_1, W_1_O);
         incMealy.insert(W_1, W_1_O);
         Visualization.visualize(incMealy.asGraph());

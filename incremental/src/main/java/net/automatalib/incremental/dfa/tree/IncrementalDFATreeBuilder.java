@@ -25,6 +25,7 @@ import net.automatalib.automaton.UniversalAutomaton;
 import net.automatalib.automaton.fsa.DFA;
 import net.automatalib.automaton.graph.TransitionEdge;
 import net.automatalib.automaton.graph.UniversalAutomatonGraphView;
+import net.automatalib.common.util.Pair;
 import net.automatalib.common.util.collection.IteratorUtil;
 import net.automatalib.common.util.mapping.MapMapping;
 import net.automatalib.common.util.mapping.MutableMapping;
@@ -150,22 +151,23 @@ public class IncrementalDFATreeBuilder<I> extends AbstractIncrementalDFABuilder<
     }
 
     @Override
-    public Acceptance lookup(Word<? extends I> inputWord) {
+    public Pair<Boolean, Boolean> lookup(Word<? extends I> inputWord) {
         Node curr = root;
 
         for (I sym : inputWord) {
             int symIdx = inputAlphabet.getSymbolIndex(sym);
             Node succ = curr.getChild(symIdx);
             if (succ == null) {
-                return Acceptance.DONT_KNOW;
+                return Pair.of(false, null);
             }
             curr = succ;
         }
-        return curr.getAcceptance();
+        Boolean out = curr.getAcceptance() == Acceptance.DONT_KNOW ? null : curr.getAcceptance().toBoolean();
+        return Pair.of(out != null, out);
     }
 
     @Override
-    public void insert(Word<? extends I> word, boolean acceptance) {
+    public void insert(Word<? extends I> word, Boolean acceptance) {
         Node curr = root;
 
         for (I sym : word) {

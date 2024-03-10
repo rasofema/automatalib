@@ -22,7 +22,6 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
@@ -35,10 +34,11 @@ import net.automatalib.automaton.transducer.MooreMachine;
 import net.automatalib.automaton.transducer.MooreMachine.MooreGraphView;
 import net.automatalib.automaton.visualization.MooreVisualizationHelper;
 import net.automatalib.common.util.IntDisjointSets;
+import net.automatalib.common.util.Pair;
 import net.automatalib.common.util.UnionFind;
 import net.automatalib.graph.Graph;
 import net.automatalib.incremental.ConflictException;
-import net.automatalib.incremental.moore.IncrementalMooreBuilder;
+import net.automatalib.incremental.IncrementalConstruction;
 import net.automatalib.ts.output.MooreTransitionSystem;
 import net.automatalib.visualization.VisualizationHelper;
 import net.automatalib.word.Word;
@@ -54,7 +54,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @param <O>
  *         output symbol class
  */
-public class IncrementalMooreDAGBuilder<I, O> implements IncrementalMooreBuilder<I, O>, InputAlphabetHolder<I> {
+public class IncrementalMooreDAGBuilder<I, O>
+        implements IncrementalConstruction.MooreBuilder<I, O>, InputAlphabetHolder<I> {
 
     private final Map<@Nullable StateSignature<O>, State<O>> register;
     private final Alphabet<I> inputAlphabet;
@@ -119,30 +120,31 @@ public class IncrementalMooreDAGBuilder<I, O> implements IncrementalMooreBuilder
     }
 
     @Override
-    public boolean lookup(Word<? extends I> word, List<? super O> output) {
+    public Pair<Boolean, Word<O>> lookup(Word<? extends I> word) {
         State<O> curr = init;
 
         if (curr == null) {
-            return false;
+            return Pair.of(false, Word.epsilon());
         }
 
-        output.add(curr.getOutput());
+        WordBuilder<O> wb = new WordBuilder<>();
+        wb.add(curr.getOutput());
 
         for (I sym : word) {
             int idx = inputAlphabet.getSymbolIndex(sym);
             State<O> succ = curr.getSuccessor(idx);
             if (succ == null) {
-                return false;
+                return Pair.of(false, wb.toWord());
             }
-            output.add(succ.getOutput());
+            wb.add(succ.getOutput());
             curr = succ;
         }
 
-        return true;
+        return Pair.of(true, wb.toWord());
     }
 
     @Override
-    public void insert(Word<? extends I> word, Word<? extends O> outputWord) {
+    public void insert(Word<? extends I> word, Word<O> outputWord) {
         assert word.size() + 1 == outputWord.size();
 
         Iterator<? extends O> outWordIterator = outputWord.iterator();
@@ -491,7 +493,8 @@ public class IncrementalMooreDAGBuilder<I, O> implements IncrementalMooreBuilder
         StateIDs<S> mooreIds = moore.stateIDs();
 
         int thisStates = register.size();
-        int id1 = getStateId(init1, ids), id2 = mooreIds.getStateId(init2) + thisStates;
+        int id1 = getStateId(init1, ids);
+        int id2 = mooreIds.getStateId(init2) + thisStates;
 
         IntDisjointSets uf = new UnionFind(thisStates + moore.size());
         uf.link(id1, id2);
@@ -535,7 +538,8 @@ public class IncrementalMooreDAGBuilder<I, O> implements IncrementalMooreBuilder
                 id1 = getStateId(succ1, ids);
                 id2 = mooreIds.getStateId(succ2) + thisStates;
 
-                int r1 = uf.find(id1), r2 = uf.find(id2);
+                int r1 = uf.find(id1);
+                int r2 = uf.find(id2);
 
                 if (r1 == r2) {
                     continue;

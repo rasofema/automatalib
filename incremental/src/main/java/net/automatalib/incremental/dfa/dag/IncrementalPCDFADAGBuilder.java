@@ -20,6 +20,7 @@ import java.util.Deque;
 import java.util.Iterator;
 
 import net.automatalib.alphabet.Alphabet;
+import net.automatalib.common.util.Pair;
 import net.automatalib.incremental.ConflictException;
 import net.automatalib.incremental.dfa.Acceptance;
 import net.automatalib.word.Word;
@@ -45,12 +46,15 @@ public class IncrementalPCDFADAGBuilder<I> extends AbstractIncrementalDFADAGBuil
     }
 
     @Override
-    public Acceptance lookup(Word<? extends I> word) {
+    public Pair<Boolean, Boolean> lookup(Word<? extends I> word) {
         State s = getState(word);
         if (s == null) {
-            return Acceptance.DONT_KNOW;
+            return Pair.of(false, null);
         }
-        return s != sink ? s.getAcceptance() : Acceptance.FALSE;
+        Boolean output = s != sink
+                ? s.getAcceptance() == Acceptance.DONT_KNOW ? null : s.getAcceptance().toBoolean()
+                : false;
+        return Pair.of(output != null, output);
     }
 
     @Override
@@ -72,7 +76,7 @@ public class IncrementalPCDFADAGBuilder<I> extends AbstractIncrementalDFADAGBuil
     }
 
     @Override
-    public void insert(Word<? extends I> word, boolean accepting) {
+    public void insert(Word<? extends I> word, Boolean accepting) {
 
         State curr = init;
         State conf = null;

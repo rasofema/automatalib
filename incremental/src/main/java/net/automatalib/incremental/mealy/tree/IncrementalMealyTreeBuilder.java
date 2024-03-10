@@ -19,7 +19,7 @@ import java.util.Objects;
 
 import net.automatalib.alphabet.Alphabet;
 import net.automatalib.incremental.ConflictException;
-import net.automatalib.incremental.mealy.IncrementalMealyBuilder;
+import net.automatalib.incremental.IncrementalConstruction;
 import net.automatalib.word.Word;
 
 /**
@@ -31,14 +31,14 @@ import net.automatalib.word.Word;
  *         output symbol class
  */
 public class IncrementalMealyTreeBuilder<I, O> extends AbstractAlphabetBasedMealyTreeBuilder<I, O>
-        implements IncrementalMealyBuilder<I, O> {
+        implements IncrementalConstruction.MealyBuilder<I, O> {
 
     public IncrementalMealyTreeBuilder(Alphabet<I> inputAlphabet) {
         super(inputAlphabet);
     }
 
     @Override
-    public void insert(Word<? extends I> input, Word<? extends O> outputWord) {
+    public void insert(Word<? extends I> input, Word<O> outputWord) {
         Node<O> curr = root;
 
         for (int i = 0; i < input.length(); i++) {

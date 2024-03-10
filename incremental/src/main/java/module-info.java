@@ -48,7 +48,6 @@ open module net.automatalib.incremental {
     exports net.automatalib.incremental.mealy;
     exports net.automatalib.incremental.mealy.dag;
     exports net.automatalib.incremental.mealy.tree;
-    exports net.automatalib.incremental.moore;
     exports net.automatalib.incremental.moore.dag;
     exports net.automatalib.incremental.moore.tree;
 }

@@ -19,7 +19,6 @@ import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -28,12 +27,13 @@ import net.automatalib.automaton.graph.TransitionEdge;
 import net.automatalib.automaton.transducer.MooreMachine;
 import net.automatalib.automaton.transducer.MooreMachine.MooreGraphView;
 import net.automatalib.automaton.visualization.MooreVisualizationHelper;
+import net.automatalib.common.util.Pair;
 import net.automatalib.common.util.collection.IteratorUtil;
 import net.automatalib.common.util.mapping.MapMapping;
 import net.automatalib.common.util.mapping.MutableMapping;
 import net.automatalib.graph.Graph;
 import net.automatalib.incremental.ConflictException;
-import net.automatalib.incremental.moore.IncrementalMooreBuilder;
+import net.automatalib.incremental.IncrementalConstruction;
 import net.automatalib.ts.output.MooreTransitionSystem;
 import net.automatalib.util.ts.traversal.TSTraversal;
 import net.automatalib.visualization.VisualizationHelper;
@@ -50,7 +50,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @param <O>
  *         output symbol class
  */
-public class IncrementalMooreTreeBuilder<I, O> implements IncrementalMooreBuilder<I, O> {
+public class IncrementalMooreTreeBuilder<I, O> implements IncrementalConstruction.MooreBuilder<I, O> {
 
     private final Alphabet<I> alphabet;
     private int alphabetSize;
@@ -154,29 +154,30 @@ public class IncrementalMooreTreeBuilder<I, O> implements IncrementalMooreBuilde
     }
 
     @Override
-    public boolean lookup(Word<? extends I> inputWord, List<? super O> output) {
+    public Pair<Boolean, Word<O>> lookup(Word<? extends I> inputWord) {
         Node<O> curr = root;
 
         if (curr == null) {
-            return false;
+            return Pair.of(false, Word.epsilon());
         }
 
-        output.add(curr.getOutput());
+        WordBuilder<O> wb = new WordBuilder<>();
+        wb.add(curr.getOutput());
 
         for (I sym : inputWord) {
             int symIdx = alphabet.getSymbolIndex(sym);
             Node<O> succ = curr.getChild(symIdx);
             if (succ == null) {
-                return false;
+                return Pair.of(false, wb.toWord());
             }
-            output.add(succ.getOutput());
+            wb.add(succ.getOutput());
             curr = succ;
         }
-        return true;
+        return Pair.of(true, wb.toWord());
     }
 
     @Override
-    public void insert(Word<? extends I> word, Word<? extends O> output) {
+    public void insert(Word<? extends I> word, Word<O> output) {
         assert word.size() + 1 == output.size();
 
         final Iterator<? extends O> outIter = output.iterator();

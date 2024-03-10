@@ -22,7 +22,6 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
@@ -34,10 +33,11 @@ import net.automatalib.automaton.graph.TransitionEdge;
 import net.automatalib.automaton.transducer.MealyMachine;
 import net.automatalib.automaton.transducer.MealyMachine.MealyGraphView;
 import net.automatalib.common.util.IntDisjointSets;
+import net.automatalib.common.util.Pair;
 import net.automatalib.common.util.UnionFind;
 import net.automatalib.graph.Graph;
 import net.automatalib.incremental.ConflictException;
-import net.automatalib.incremental.mealy.IncrementalMealyBuilder;
+import net.automatalib.incremental.IncrementalConstruction;
 import net.automatalib.ts.output.MealyTransitionSystem;
 import net.automatalib.visualization.VisualizationHelper;
 import net.automatalib.word.Word;
@@ -52,7 +52,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @param <O>
  *         output symbol class
  */
-public class IncrementalMealyDAGBuilder<I, O> implements IncrementalMealyBuilder<I, O>, InputAlphabetHolder<I> {
+public class IncrementalMealyDAGBuilder<I, O>
+        implements IncrementalConstruction.MealyBuilder<I, O>, InputAlphabetHolder<I> {
 
     private final Map<@Nullable StateSignature<O>, State<O>> register;
     private final Alphabet<I> inputAlphabet;
@@ -116,23 +117,24 @@ public class IncrementalMealyDAGBuilder<I, O> implements IncrementalMealyBuilder
     }
 
     @Override
-    public boolean lookup(Word<? extends I> word, List<? super O> output) {
+    public Pair<Boolean, Word<O>> lookup(Word<? extends I> word) {
+        WordBuilder<O> wb = new WordBuilder<>();
         State<O> curr = init;
         for (I sym : word) {
             int idx = inputAlphabet.getSymbolIndex(sym);
             State<O> succ = curr.getSuccessor(idx);
             if (succ == null) {
-                return false;
+                return Pair.of(false, wb.toWord());
             }
-            output.add(curr.getOutput(idx));
+            wb.add(curr.getOutput(idx));
             curr = succ;
         }
 
-        return true;
+        return Pair.of(true, wb.toWord());
     }
 
     @Override
-    public void insert(Word<? extends I> word, Word<? extends O> outputWord) {
+    public void insert(Word<? extends I> word, Word<O> outputWord) {
         State<O> curr = init;
         State<O> conf = null;
 
