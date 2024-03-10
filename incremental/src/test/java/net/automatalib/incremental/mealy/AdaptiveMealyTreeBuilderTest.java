@@ -24,6 +24,7 @@ import net.automatalib.alphabet.impl.Alphabets;
 import net.automatalib.alphabet.impl.GrowingMapAlphabet;
 import net.automatalib.automaton.transducer.impl.CompactMealy;
 import net.automatalib.common.util.Pair;
+import net.automatalib.incremental.AdaptiveConstruction;
 import net.automatalib.incremental.mealy.tree.AdaptiveMealyTreeBuilder;
 import net.automatalib.ts.output.MealyTransitionSystem;
 import net.automatalib.word.Word;
@@ -59,7 +60,7 @@ public class AdaptiveMealyTreeBuilderTest {
         adaptiveMealy.insert(W_B_2, W_B_2_O);
         adaptiveMealy.insert(W_B_3, W_B_3_O);
 
-        Assert.assertFalse(adaptiveMealy.lookup(Word.fromString("aababaa"), new ArrayList<>()));
+        Assert.assertFalse(adaptiveMealy.lookup(Word.fromString("aababaa")).getFirst());
         // reset for further tests
         this.adaptiveMealy = new AdaptiveMealyTreeBuilder<>(TEST_ALPHABET);
     }
@@ -75,14 +76,12 @@ public class AdaptiveMealyTreeBuilderTest {
         Assert.assertTrue(adaptiveMealy.hasDefinitiveInformation(W_1.prefix(2)));
         Assert.assertFalse(adaptiveMealy.hasDefinitiveInformation(W_1.append('a')));
 
-        WordBuilder<Character> wb = new WordBuilder<>();
+        Assert.assertTrue(adaptiveMealy.lookup(W_1).getFirst());
+        Assert.assertEquals(adaptiveMealy.lookup(W_1).getSecond(), W_1_O);
 
-        Assert.assertTrue(adaptiveMealy.lookup(W_1, wb));
-        Assert.assertEquals(wb.toWord(), W_1_O);
-        wb.clear();
-        Assert.assertTrue(adaptiveMealy.lookup(W_1.prefix(2), wb));
-        Assert.assertEquals(wb.toWord(), W_1_O.prefix(2));
-        wb.clear();
+        Assert.assertTrue(adaptiveMealy.lookup(W_1.prefix(2)).getFirst());
+        Assert.assertEquals(adaptiveMealy.lookup(W_1.prefix(2)).getSecond(), W_1_O.prefix(2));
+
         Assert.assertFalse(adaptiveMealy.hasDefinitiveInformation(W_2));
         Assert.assertFalse(adaptiveMealy.hasDefinitiveInformation(W_3));
 
@@ -91,33 +90,31 @@ public class AdaptiveMealyTreeBuilderTest {
         Assert.assertTrue(adaptiveMealy.hasDefinitiveInformation(W_2));
         Assert.assertFalse(adaptiveMealy.hasDefinitiveInformation(W_3));
 
-        Assert.assertTrue(adaptiveMealy.lookup(W_2, wb));
-        Assert.assertEquals(wb.toWord(), W_2_O);
-        wb.clear();
-        Assert.assertTrue(adaptiveMealy.lookup(W_2.prefix(1), wb));
-        Assert.assertEquals(wb.toWord(), W_2_O.prefix(1));
-        wb.clear();
-        Assert.assertTrue(adaptiveMealy.lookup(W_1, wb));
-        Assert.assertEquals(wb.toWord(), W_1_O);
-        wb.clear();
+        Assert.assertTrue(adaptiveMealy.lookup(W_2).getFirst());
+        Assert.assertEquals(adaptiveMealy.lookup(W_2).getSecond(), W_2_O);
+
+        Assert.assertTrue(adaptiveMealy.lookup(W_2.prefix(1)).getFirst());
+        Assert.assertEquals(adaptiveMealy.lookup(W_2.prefix(1)).getSecond(), W_2_O.prefix(1));
+
+        Assert.assertTrue(adaptiveMealy.lookup(W_1).getFirst());
+        Assert.assertEquals(adaptiveMealy.lookup(W_1).getSecond(), W_1_O);
 
         adaptiveMealy.insert(W_3, W_3_O);
         Assert.assertTrue(adaptiveMealy.hasDefinitiveInformation(W_1));
         Assert.assertTrue(adaptiveMealy.hasDefinitiveInformation(W_2));
         Assert.assertTrue(adaptiveMealy.hasDefinitiveInformation(W_3));
 
-        Assert.assertTrue(adaptiveMealy.lookup(W_3, wb));
-        Assert.assertEquals(wb.toWord(), W_3_O);
-        wb.clear();
-        Assert.assertTrue(adaptiveMealy.lookup(W_3.prefix(2), wb));
-        Assert.assertEquals(wb.toWord(), W_3_O.prefix(2));
-        wb.clear();
-        Assert.assertTrue(adaptiveMealy.lookup(W_1, wb));
-        Assert.assertEquals(wb.toWord(), W_1_O);
-        wb.clear();
-        Assert.assertTrue(adaptiveMealy.lookup(W_2, wb));
-        Assert.assertEquals(wb.toWord(), W_2_O);
-        wb.clear();
+        Assert.assertTrue(adaptiveMealy.lookup(W_3).getFirst());
+        Assert.assertEquals(adaptiveMealy.lookup(W_3).getSecond(), W_3_O);
+
+        Assert.assertTrue(adaptiveMealy.lookup(W_3.prefix(2)).getFirst());
+        Assert.assertEquals(adaptiveMealy.lookup(W_3.prefix(2)).getSecond(), W_3_O.prefix(2));
+
+        Assert.assertTrue(adaptiveMealy.lookup(W_1).getFirst());
+        Assert.assertEquals(adaptiveMealy.lookup(W_1).getSecond(), W_1_O);
+
+        Assert.assertTrue(adaptiveMealy.lookup(W_2).getFirst());
+        Assert.assertEquals(adaptiveMealy.lookup(W_2).getSecond(), W_2_O);
     }
 
     @Test(dependsOnMethods = "testLookup")
@@ -202,7 +199,8 @@ public class AdaptiveMealyTreeBuilderTest {
 
     @Test
     public void testCounterexampleOfLengthOne() {
-        final AdaptiveMealyBuilder<Character, Character> incMealy = new AdaptiveMealyTreeBuilder<>(TEST_ALPHABET);
+        final AdaptiveConstruction.MealyBuilder<Character, Character> incMealy = new AdaptiveMealyTreeBuilder<>(
+                TEST_ALPHABET);
         incMealy.insert(Word.fromLetter('a'), Word.fromLetter('x'));
 
         final CompactMealy<Character, Character> dfa = new CompactMealy<>(TEST_ALPHABET);
@@ -218,7 +216,8 @@ public class AdaptiveMealyTreeBuilderTest {
     @Test(dependsOnMethods = "testLookup")
     public void testNewInputSymbol() {
         final GrowingAlphabet<Character> alphabet = new GrowingMapAlphabet<>(TEST_ALPHABET);
-        final AdaptiveMealyBuilder<Character, Character> growableBuilder = new AdaptiveMealyTreeBuilder<>(alphabet);
+        final AdaptiveConstruction.MealyBuilder<Character, Character> growableBuilder = new AdaptiveMealyTreeBuilder<>(
+                alphabet);
 
         growableBuilder.addAlphabetSymbol('d');
         growableBuilder.addAlphabetSymbol('d');
@@ -229,19 +228,20 @@ public class AdaptiveMealyTreeBuilderTest {
         growableBuilder.insert(input1, output1);
 
         Assert.assertTrue(growableBuilder.hasDefinitiveInformation(input1));
-        Assert.assertEquals(growableBuilder.lookup(input1), output1);
+        Assert.assertEquals(growableBuilder.lookup(input1).getSecond(), output1);
 
         final Word<Character> input2 = Word.fromString("dddd");
 
         Assert.assertFalse(growableBuilder.hasDefinitiveInformation(input2));
-        Assert.assertEquals(growableBuilder.lookup(input2), Word.fromLetter('1'));
+        Assert.assertEquals(growableBuilder.lookup(input2).getSecond(), Word.fromLetter('1'));
     }
 
     @Test
     public void testEmpty() {
-        final AdaptiveMealyBuilder<Character, Character> incMealy = new AdaptiveMealyTreeBuilder<>(TEST_ALPHABET);
+        final AdaptiveConstruction.MealyBuilder<Character, Character> incMealy = new AdaptiveMealyTreeBuilder<>(
+                TEST_ALPHABET);
 
-        Assert.assertTrue(incMealy.lookup(W_B_1).isEmpty());
+        Assert.assertTrue(incMealy.lookup(W_B_1).getSecond().isEmpty());
         Assert.assertNull(incMealy.getOldestInput());
     }
 }

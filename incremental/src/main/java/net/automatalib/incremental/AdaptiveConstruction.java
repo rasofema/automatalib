@@ -32,10 +32,11 @@ public interface AdaptiveConstruction<M extends Output<I, D>, I, D> extends Cons
     @Nullable
     Word<I> getOldestInput();
 
-    interface MealyBuilder<I, O> extends AdaptiveConstruction<MealyMachine<?, I, ?, O>, I, Word<O>> {
+    interface MealyBuilder<I, O>
+            extends AdaptiveConstruction<MealyMachine<?, I, ?, O>, I, Word<O>>, Construction.MealyBuilder<I, O> {
     }
 
-    interface DFABuilder<I> extends AdaptiveConstruction<DFA<?, I>, I, Boolean> {
+    interface DFABuilder<I> extends AdaptiveConstruction<DFA<?, I>, I, Boolean>, Construction.DFABuilder<I> {
     }
 
 }

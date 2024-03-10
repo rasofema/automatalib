@@ -26,6 +26,7 @@ import net.automatalib.alphabet.impl.GrowingMapAlphabet;
 import net.automatalib.automaton.fsa.impl.CompactDFA;
 import net.automatalib.common.util.IOUtil;
 import net.automatalib.incremental.ConflictException;
+import net.automatalib.incremental.IncrementalConstruction;
 import net.automatalib.serialization.dot.GraphDOT;
 import net.automatalib.ts.UniversalDTS;
 import net.automatalib.word.Word;
@@ -43,14 +44,14 @@ public abstract class AbstractIncrementalDFABuilderTest {
     private static final Word<Character> W_3 = Word.fromString("acb");
     private static final Word<Character> W_4 = Word.epsilon();
 
-    private IncrementalDFABuilder<Character> incDfa;
+    private IncrementalConstruction.DFABuilder<Character> incDfa;
 
     @BeforeClass
     public void setUp() {
         this.incDfa = createIncrementalDFABuilder(TEST_ALPHABET);
     }
 
-    protected abstract <I> IncrementalDFABuilder<I> createIncrementalDFABuilder(Alphabet<I> alphabet);
+    protected abstract <I> IncrementalConstruction.DFABuilder<I> createIncrementalDFABuilder(Alphabet<I> alphabet);
 
     protected abstract String getDOTResource();
 
@@ -64,48 +65,48 @@ public abstract class AbstractIncrementalDFABuilderTest {
         incDfa.insert(wB2, true);
         incDfa.insert(wB3, true);
 
-        Assert.assertEquals(incDfa.lookup(Word.fromString("aababaa")), Acceptance.DONT_KNOW);
+        Assert.assertEquals(incDfa.lookup(Word.fromString("aababaa")).getSecond(), null);
         this.incDfa = createIncrementalDFABuilder(TEST_ALPHABET);
     }
 
     @Test(dependsOnMethods = "testConfluenceBug")
     public void testLookup() {
-        Assert.assertEquals(Acceptance.DONT_KNOW, incDfa.lookup(W_1));
-        Assert.assertEquals(incDfa.lookup(W_2), Acceptance.DONT_KNOW);
-        Assert.assertEquals(incDfa.lookup(W_3), Acceptance.DONT_KNOW);
+        Assert.assertEquals(null, incDfa.lookup(W_1).getSecond());
+        Assert.assertEquals(incDfa.lookup(W_2).getSecond(), null);
+        Assert.assertEquals(incDfa.lookup(W_3).getSecond(), null);
 
         incDfa.insert(W_1, true);
-        Assert.assertEquals(incDfa.lookup(W_1), Acceptance.TRUE);
-        Assert.assertEquals(incDfa.lookup(W_2), Acceptance.DONT_KNOW);
-        Assert.assertEquals(incDfa.lookup(W_3), Acceptance.DONT_KNOW);
+        Assert.assertEquals(incDfa.lookup(W_1).getSecond(), true);
+        Assert.assertEquals(incDfa.lookup(W_2).getSecond(), null);
+        Assert.assertEquals(incDfa.lookup(W_3).getSecond(), null);
 
-        Assert.assertEquals(incDfa.lookup(W_1.prefix(2)), Acceptance.DONT_KNOW);
-        Assert.assertEquals(incDfa.lookup(W_2.prefix(1)), Acceptance.DONT_KNOW);
-        Assert.assertEquals(incDfa.lookup(W_3.prefix(2)), Acceptance.DONT_KNOW);
+        Assert.assertEquals(incDfa.lookup(W_1.prefix(2)).getSecond(), null);
+        Assert.assertEquals(incDfa.lookup(W_2.prefix(1)).getSecond(), null);
+        Assert.assertEquals(incDfa.lookup(W_3.prefix(2)).getSecond(), null);
 
         incDfa.insert(W_2, false);
-        Assert.assertEquals(incDfa.lookup(W_1), Acceptance.TRUE);
-        Assert.assertEquals(incDfa.lookup(W_2), Acceptance.FALSE);
-        Assert.assertEquals(incDfa.lookup(W_3), Acceptance.DONT_KNOW);
+        Assert.assertEquals(incDfa.lookup(W_1).getSecond(), true);
+        Assert.assertEquals(incDfa.lookup(W_2).getSecond(), false);
+        Assert.assertEquals(incDfa.lookup(W_3).getSecond(), null);
 
-        Assert.assertEquals(incDfa.lookup(W_1.prefix(2)), Acceptance.DONT_KNOW);
-        Assert.assertEquals(incDfa.lookup(W_2.prefix(1)), Acceptance.DONT_KNOW);
-        Assert.assertEquals(incDfa.lookup(W_3.prefix(2)), Acceptance.FALSE);
+        Assert.assertEquals(incDfa.lookup(W_1.prefix(2)).getSecond(), null);
+        Assert.assertEquals(incDfa.lookup(W_2.prefix(1)).getSecond(), null);
+        Assert.assertEquals(incDfa.lookup(W_3.prefix(2)).getSecond(), false);
 
         incDfa.insert(W_3, true);
-        Assert.assertEquals(incDfa.lookup(W_1), Acceptance.TRUE);
-        Assert.assertEquals(incDfa.lookup(W_2), Acceptance.FALSE);
-        Assert.assertEquals(incDfa.lookup(W_3), Acceptance.TRUE);
+        Assert.assertEquals(incDfa.lookup(W_1).getSecond(), true);
+        Assert.assertEquals(incDfa.lookup(W_2).getSecond(), false);
+        Assert.assertEquals(incDfa.lookup(W_3).getSecond(), true);
 
-        Assert.assertEquals(incDfa.lookup(W_1.prefix(2)), Acceptance.DONT_KNOW);
-        Assert.assertEquals(incDfa.lookup(W_2.prefix(1)), Acceptance.DONT_KNOW);
-        Assert.assertEquals(incDfa.lookup(W_3.prefix(2)), Acceptance.FALSE);
+        Assert.assertEquals(incDfa.lookup(W_1.prefix(2)).getSecond(), null);
+        Assert.assertEquals(incDfa.lookup(W_2.prefix(1)).getSecond(), null);
+        Assert.assertEquals(incDfa.lookup(W_3.prefix(2)).getSecond(), false);
 
         incDfa.insert(W_4, true);
-        Assert.assertEquals(incDfa.lookup(W_1), Acceptance.TRUE);
-        Assert.assertEquals(incDfa.lookup(W_2), Acceptance.FALSE);
-        Assert.assertEquals(incDfa.lookup(W_3), Acceptance.TRUE);
-        Assert.assertEquals(incDfa.lookup(W_4), Acceptance.TRUE);
+        Assert.assertEquals(incDfa.lookup(W_1).getSecond(), true);
+        Assert.assertEquals(incDfa.lookup(W_2).getSecond(), false);
+        Assert.assertEquals(incDfa.lookup(W_3).getSecond(), true);
+        Assert.assertEquals(incDfa.lookup(W_4).getSecond(), true);
     }
 
     @Test(dependsOnMethods = "testLookup")
@@ -201,7 +202,7 @@ public abstract class AbstractIncrementalDFABuilderTest {
 
     @Test
     public void testCounterexampleOfLengthOne() {
-        final IncrementalDFABuilder<Character> incDfa = createIncrementalDFABuilder(TEST_ALPHABET);
+        final IncrementalConstruction.DFABuilder<Character> incDfa = createIncrementalDFABuilder(TEST_ALPHABET);
         incDfa.insert(Word.fromLetter('a'), true);
 
         final CompactDFA<Character> dfa = new CompactDFA<>(TEST_ALPHABET);
@@ -217,7 +218,7 @@ public abstract class AbstractIncrementalDFABuilderTest {
     @Test(dependsOnMethods = "testLookup")
     public void testNewInputSymbol() {
         final GrowingAlphabet<Character> alphabet = new GrowingMapAlphabet<>(TEST_ALPHABET);
-        final IncrementalDFABuilder<Character> growableBuilder = createIncrementalDFABuilder(alphabet);
+        final IncrementalConstruction.DFABuilder<Character> growableBuilder = createIncrementalDFABuilder(alphabet);
 
         growableBuilder.addAlphabetSymbol('d');
         growableBuilder.addAlphabetSymbol('d');
@@ -227,17 +228,17 @@ public abstract class AbstractIncrementalDFABuilderTest {
         growableBuilder.insert(input1, true);
 
         Assert.assertTrue(growableBuilder.hasDefinitiveInformation(input1));
-        Assert.assertEquals(growableBuilder.lookup(input1), Acceptance.TRUE);
+        Assert.assertEquals(growableBuilder.lookup(input1).getSecond(), true);
 
         growableBuilder.addAlphabetSymbol('e');
 
         final Word<Character> input2 = Word.fromString("ddee");
 
         Assert.assertFalse(growableBuilder.hasDefinitiveInformation(input2));
-        Assert.assertEquals(growableBuilder.lookup(input2), Acceptance.DONT_KNOW);
+        Assert.assertEquals(growableBuilder.lookup(input2).getSecond(), null);
 
         growableBuilder.insert(input2, false);
-        Assert.assertEquals(growableBuilder.lookup(input2), Acceptance.FALSE);
+        Assert.assertEquals(growableBuilder.lookup(input2).getSecond(), false);
     }
 
 }

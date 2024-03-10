@@ -20,6 +20,7 @@ import java.util.List;
 
 import net.automatalib.alphabet.Alphabet;
 import net.automatalib.common.util.Pair;
+import net.automatalib.incremental.IncrementalConstruction;
 import net.automatalib.incremental.IntegrationUtil;
 import net.automatalib.incremental.IntegrationUtil.ParsedTraces;
 import net.automatalib.incremental.dfa.dag.IncrementalPCDFADAGBuilder;
@@ -31,7 +32,7 @@ import org.testng.annotations.Test;
 public class IncrementalPCDFADAGBuilderTest extends AbstractIncrementalPCDFABuilderTest {
 
     @Override
-    protected <I> IncrementalDFABuilder<I> createIncrementalPCDFABuilder(Alphabet<I> alphabet) {
+    protected <I> IncrementalConstruction.DFABuilder<I> createIncrementalPCDFABuilder(Alphabet<I> alphabet) {
         return new IncrementalPCDFADAGBuilder<>(alphabet);
     }
 
@@ -64,7 +65,7 @@ public class IncrementalPCDFADAGBuilderTest extends AbstractIncrementalPCDFABuil
 
         Assert.assertTrue(IntegrationUtil.isPrefixClosed(traces));
 
-        final IncrementalDFABuilder<Integer> cache = createIncrementalPCDFABuilder(alphabet);
+        final IncrementalConstruction.DFABuilder<Integer> cache = createIncrementalPCDFABuilder(alphabet);
 
         // test insertion without errors
         for (Pair<Word<Integer>, Boolean> trace : traces) {
@@ -76,12 +77,12 @@ public class IncrementalPCDFADAGBuilderTest extends AbstractIncrementalPCDFABuil
             final Word<Integer> word = trace.getFirst();
             final boolean accepted = trace.getSecond();
 
-            Assert.assertEquals(accepted, cache.lookup(word).toBoolean());
+            Assert.assertEquals(accepted, cache.lookup(word).getSecond());
 
             // test prefix-closedness
             if (accepted) {
                 for (Word<Integer> prefix : word.prefixes(false)) {
-                    Assert.assertTrue(cache.lookup(prefix).toBoolean());
+                    Assert.assertTrue(cache.lookup(prefix).getSecond());
                 }
             }
         }

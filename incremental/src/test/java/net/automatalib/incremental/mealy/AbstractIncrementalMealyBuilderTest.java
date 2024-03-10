@@ -27,6 +27,7 @@ import net.automatalib.alphabet.impl.GrowingMapAlphabet;
 import net.automatalib.automaton.transducer.impl.CompactMealy;
 import net.automatalib.common.util.IOUtil;
 import net.automatalib.incremental.ConflictException;
+import net.automatalib.incremental.IncrementalConstruction;
 import net.automatalib.serialization.dot.GraphDOT;
 import net.automatalib.ts.output.MealyTransitionSystem;
 import net.automatalib.word.Word;
@@ -54,14 +55,15 @@ public abstract class AbstractIncrementalMealyBuilderTest {
     private static final Word<Character> W_B_3 = Word.fromString("aabaa");
     private static final Word<Character> W_B_3_O = Word.fromString("xxxxx");
 
-    private IncrementalMealyBuilder<Character, Character> incMealy;
+    private IncrementalConstruction.MealyBuilder<Character, Character> incMealy;
 
     @BeforeClass
     public void setUp() {
         this.incMealy = createIncrementalMealyBuilder(TEST_ALPHABET);
     }
 
-    protected abstract <I, O> IncrementalMealyBuilder<I, O> createIncrementalMealyBuilder(Alphabet<I> alphabet);
+    protected abstract <I, O> IncrementalConstruction.MealyBuilder<I, O> createIncrementalMealyBuilder(
+            Alphabet<I> alphabet);
 
     protected abstract String getDOTResource();
 
@@ -71,7 +73,7 @@ public abstract class AbstractIncrementalMealyBuilderTest {
         incMealy.insert(W_B_2, W_B_2_O);
         incMealy.insert(W_B_3, W_B_3_O);
 
-        Assert.assertFalse(incMealy.lookup(Word.fromString("aababaa"), new ArrayList<>()));
+        Assert.assertFalse(incMealy.lookup(Word.fromString("aababaa")).getFirst());
         // reset for further tests
         this.incMealy = createIncrementalMealyBuilder(TEST_ALPHABET);
     }
@@ -87,14 +89,12 @@ public abstract class AbstractIncrementalMealyBuilderTest {
         Assert.assertTrue(incMealy.hasDefinitiveInformation(W_1.prefix(2)));
         Assert.assertFalse(incMealy.hasDefinitiveInformation(W_1.append('a')));
 
-        WordBuilder<Character> wb = new WordBuilder<>();
+        Assert.assertTrue(incMealy.lookup(W_1).getFirst());
+        Assert.assertEquals(incMealy.lookup(W_1).getSecond(), W_1_O);
 
-        Assert.assertTrue(incMealy.lookup(W_1, wb));
-        Assert.assertEquals(wb.toWord(), W_1_O);
-        wb.clear();
-        Assert.assertTrue(incMealy.lookup(W_1.prefix(2), wb));
-        Assert.assertEquals(wb.toWord(), W_1_O.prefix(2));
-        wb.clear();
+        Assert.assertTrue(incMealy.lookup(W_1.prefix(2)).getFirst());
+        Assert.assertEquals(incMealy.lookup(W_1.prefix(2)).getSecond(), W_1_O.prefix(2));
+
         Assert.assertFalse(incMealy.hasDefinitiveInformation(W_2));
         Assert.assertFalse(incMealy.hasDefinitiveInformation(W_3));
 
@@ -103,33 +103,32 @@ public abstract class AbstractIncrementalMealyBuilderTest {
         Assert.assertTrue(incMealy.hasDefinitiveInformation(W_2));
         Assert.assertFalse(incMealy.hasDefinitiveInformation(W_3));
 
-        Assert.assertTrue(incMealy.lookup(W_2, wb));
-        Assert.assertEquals(wb.toWord(), W_2_O);
-        wb.clear();
-        Assert.assertTrue(incMealy.lookup(W_2.prefix(1), wb));
-        Assert.assertEquals(wb.toWord(), W_2_O.prefix(1));
-        wb.clear();
-        Assert.assertTrue(incMealy.lookup(W_1, wb));
-        Assert.assertEquals(wb.toWord(), W_1_O);
-        wb.clear();
+        Assert.assertTrue(incMealy.lookup(W_2).getFirst());
+        Assert.assertEquals(incMealy.lookup(W_2).getSecond(), W_2_O);
+
+        Assert.assertTrue(incMealy.lookup(W_2.prefix(1)).getFirst());
+        Assert.assertEquals(incMealy.lookup(W_2.prefix(1)).getSecond(), W_2_O.prefix(1));
+
+        Assert.assertTrue(incMealy.lookup(W_1).getFirst());
+        Assert.assertEquals(incMealy.lookup(W_1).getSecond(), W_1_O);
 
         incMealy.insert(W_3, W_3_O);
         Assert.assertTrue(incMealy.hasDefinitiveInformation(W_1));
         Assert.assertTrue(incMealy.hasDefinitiveInformation(W_2));
         Assert.assertTrue(incMealy.hasDefinitiveInformation(W_3));
 
-        Assert.assertTrue(incMealy.lookup(W_3, wb));
-        Assert.assertEquals(wb.toWord(), W_3_O);
-        wb.clear();
-        Assert.assertTrue(incMealy.lookup(W_3.prefix(2), wb));
-        Assert.assertEquals(wb.toWord(), W_3_O.prefix(2));
-        wb.clear();
-        Assert.assertTrue(incMealy.lookup(W_1, wb));
-        Assert.assertEquals(wb.toWord(), W_1_O);
-        wb.clear();
-        Assert.assertTrue(incMealy.lookup(W_2, wb));
-        Assert.assertEquals(wb.toWord(), W_2_O);
-        wb.clear();
+        Assert.assertTrue(incMealy.lookup(W_3).getFirst());
+        Assert.assertEquals(incMealy.lookup(W_3).getSecond(), W_3_O);
+
+        Assert.assertTrue(incMealy.lookup(W_3.prefix(2)).getFirst());
+        Assert.assertEquals(incMealy.lookup(W_3.prefix(2)).getSecond(), W_3_O.prefix(2));
+
+        Assert.assertTrue(incMealy.lookup(W_1).getFirst());
+        Assert.assertEquals(incMealy.lookup(W_1).getSecond(), W_1_O);
+
+        Assert.assertTrue(incMealy.lookup(W_2).getFirst());
+        Assert.assertEquals(incMealy.lookup(W_2).getSecond(), W_2_O);
+
     }
 
     @Test(dependsOnMethods = "testLookup")
@@ -218,7 +217,8 @@ public abstract class AbstractIncrementalMealyBuilderTest {
 
     @Test
     public void testCounterexampleOfLengthOne() {
-        final IncrementalMealyBuilder<Character, Character> incMealy = createIncrementalMealyBuilder(TEST_ALPHABET);
+        final IncrementalConstruction.MealyBuilder<Character, Character> incMealy = createIncrementalMealyBuilder(
+                TEST_ALPHABET);
         incMealy.insert(Word.fromLetter('a'), Word.fromLetter('x'));
 
         final CompactMealy<Character, Character> dfa = new CompactMealy<>(TEST_ALPHABET);
@@ -234,7 +234,8 @@ public abstract class AbstractIncrementalMealyBuilderTest {
     @Test(dependsOnMethods = "testLookup")
     public void testNewInputSymbol() {
         final GrowingAlphabet<Character> alphabet = new GrowingMapAlphabet<>(TEST_ALPHABET);
-        final IncrementalMealyBuilder<Character, Character> growableBuilder = createIncrementalMealyBuilder(alphabet);
+        final IncrementalConstruction.MealyBuilder<Character, Character> growableBuilder = createIncrementalMealyBuilder(
+                alphabet);
 
         growableBuilder.addAlphabetSymbol('d');
         growableBuilder.addAlphabetSymbol('d');
@@ -245,14 +246,14 @@ public abstract class AbstractIncrementalMealyBuilderTest {
         growableBuilder.insert(input1, output1);
 
         Assert.assertTrue(growableBuilder.hasDefinitiveInformation(input1));
-        Assert.assertEquals(growableBuilder.lookup(input1), output1);
+        Assert.assertEquals(growableBuilder.lookup(input1).getSecond(), output1);
 
         growableBuilder.addAlphabetSymbol('e');
 
         final Word<Character> input2 = Word.fromString("ddee");
 
         Assert.assertFalse(growableBuilder.hasDefinitiveInformation(input2));
-        Assert.assertEquals(growableBuilder.lookup(input2), Word.fromLetter('1'));
+        Assert.assertEquals(growableBuilder.lookup(input2).getSecond(), Word.fromLetter('1'));
     }
 
 }

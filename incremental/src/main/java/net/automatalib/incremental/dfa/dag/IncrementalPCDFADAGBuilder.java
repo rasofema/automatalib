@@ -51,9 +51,11 @@ public class IncrementalPCDFADAGBuilder<I> extends AbstractIncrementalDFADAGBuil
         if (s == null) {
             return Pair.of(false, null);
         }
-        Boolean output = s != sink
-                ? s.getAcceptance() == Acceptance.DONT_KNOW ? null : s.getAcceptance().toBoolean()
-                : false;
+
+        if (s == sink) {
+            return Pair.of(true, false);
+        }
+        Boolean output = s.getAcceptance() == Acceptance.DONT_KNOW ? null : s.getAcceptance().toBoolean();
         return Pair.of(output != null, output);
     }
 

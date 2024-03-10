@@ -20,6 +20,7 @@ import java.util.List;
 
 import net.automatalib.alphabet.Alphabet;
 import net.automatalib.common.util.Pair;
+import net.automatalib.incremental.IncrementalConstruction;
 import net.automatalib.incremental.IntegrationUtil;
 import net.automatalib.incremental.IntegrationUtil.ParsedTraces;
 import net.automatalib.incremental.mealy.dag.IncrementalMealyDAGBuilder;
@@ -31,7 +32,7 @@ import org.testng.annotations.Test;
 public class IncrementalMealyDAGBuilderTest extends AbstractIncrementalMealyBuilderTest {
 
     @Override
-    protected <I, O> IncrementalMealyBuilder<I, O> createIncrementalMealyBuilder(Alphabet<I> alphabet) {
+    protected <I, O> IncrementalConstruction.MealyBuilder<I, O> createIncrementalMealyBuilder(Alphabet<I> alphabet) {
         return new IncrementalMealyDAGBuilder<>(alphabet);
     }
 
@@ -62,7 +63,7 @@ public class IncrementalMealyDAGBuilderTest extends AbstractIncrementalMealyBuil
         final Alphabet<Integer> alphabet = parsedData.alphabet;
         final List<Pair<Word<Integer>, Word<Integer>>> traces = parsedData.traces;
 
-        final IncrementalMealyBuilder<Integer, Integer> cache = createIncrementalMealyBuilder(alphabet);
+        final IncrementalConstruction.MealyBuilder<Integer, Integer> cache = createIncrementalMealyBuilder(alphabet);
 
         // test insertion without errors
         for (Pair<Word<Integer>, Word<Integer>> trace : traces) {
@@ -71,7 +72,7 @@ public class IncrementalMealyDAGBuilderTest extends AbstractIncrementalMealyBuil
 
             cache.insert(input, value);
             // test direct caching behavior
-            Assert.assertEquals(value, cache.lookup(input));
+            Assert.assertEquals(value, cache.lookup(input).getSecond());
         }
 
         // test global caching behavior
@@ -79,7 +80,7 @@ public class IncrementalMealyDAGBuilderTest extends AbstractIncrementalMealyBuil
             final Word<Integer> input = trace.getFirst();
             final Word<Integer> value = trace.getSecond();
 
-            Assert.assertEquals(value, cache.lookup(input));
+            Assert.assertEquals(value, cache.lookup(input).getSecond());
         }
     }
 }

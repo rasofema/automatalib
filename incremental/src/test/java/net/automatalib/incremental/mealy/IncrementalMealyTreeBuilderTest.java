@@ -16,6 +16,7 @@
 package net.automatalib.incremental.mealy;
 
 import net.automatalib.alphabet.Alphabet;
+import net.automatalib.incremental.IncrementalConstruction;
 import net.automatalib.incremental.mealy.tree.IncrementalMealyTreeBuilder;
 import org.testng.annotations.Test;
 
@@ -23,7 +24,7 @@ import org.testng.annotations.Test;
 public class IncrementalMealyTreeBuilderTest extends AbstractIncrementalMealyBuilderTest {
 
     @Override
-    protected <I, O> IncrementalMealyBuilder<I, O> createIncrementalMealyBuilder(Alphabet<I> alphabet) {
+    protected <I, O> IncrementalConstruction.MealyBuilder<I, O> createIncrementalMealyBuilder(Alphabet<I> alphabet) {
         return new IncrementalMealyTreeBuilder<>(alphabet);
     }
 

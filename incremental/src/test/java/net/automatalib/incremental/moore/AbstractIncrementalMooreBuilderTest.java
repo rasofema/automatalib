@@ -27,6 +27,7 @@ import net.automatalib.alphabet.impl.GrowingMapAlphabet;
 import net.automatalib.automaton.transducer.impl.CompactMoore;
 import net.automatalib.common.util.IOUtil;
 import net.automatalib.incremental.ConflictException;
+import net.automatalib.incremental.IncrementalConstruction;
 import net.automatalib.serialization.dot.GraphDOT;
 import net.automatalib.ts.output.MooreTransitionSystem;
 import net.automatalib.word.Word;
@@ -54,14 +55,15 @@ public abstract class AbstractIncrementalMooreBuilderTest {
     private static final Word<Character> W_B_3 = Word.fromString("aabaa");
     private static final Word<Character> W_B_3_O = Word.fromString("-xxxxx");
 
-    private IncrementalMooreBuilder<Character, Character> incMoore;
+    private IncrementalConstruction.MooreBuilder<Character, Character> incMoore;
 
     @BeforeClass
     public void setUp() {
         this.incMoore = createIncrementalMooreBuilder(TEST_ALPHABET);
     }
 
-    protected abstract <I, O> IncrementalMooreBuilder<I, O> createIncrementalMooreBuilder(Alphabet<I> alphabet);
+    protected abstract <I, O> IncrementalConstruction.MooreBuilder<I, O> createIncrementalMooreBuilder(
+            Alphabet<I> alphabet);
 
     protected abstract String getDOTResource();
 
@@ -71,7 +73,7 @@ public abstract class AbstractIncrementalMooreBuilderTest {
         incMoore.insert(W_B_2, W_B_2_O);
         incMoore.insert(W_B_3, W_B_3_O);
 
-        Assert.assertFalse(incMoore.lookup(Word.fromString("aababaa"), new ArrayList<>()));
+        Assert.assertFalse(incMoore.lookup(Word.fromString("aababaa")).getFirst());
         // reset for further tests
         this.incMoore = createIncrementalMooreBuilder(TEST_ALPHABET);
     }
@@ -87,14 +89,12 @@ public abstract class AbstractIncrementalMooreBuilderTest {
         Assert.assertTrue(incMoore.hasDefinitiveInformation(W_1.prefix(2)));
         Assert.assertFalse(incMoore.hasDefinitiveInformation(W_1.append('a')));
 
-        WordBuilder<Character> wb = new WordBuilder<>();
+        Assert.assertTrue(incMoore.lookup(W_1).getFirst());
+        Assert.assertEquals(incMoore.lookup(W_1).getSecond(), W_1_O);
 
-        Assert.assertTrue(incMoore.lookup(W_1, wb));
-        Assert.assertEquals(wb.toWord(), W_1_O);
-        wb.clear();
-        Assert.assertTrue(incMoore.lookup(W_1.prefix(2), wb));
-        Assert.assertEquals(wb.toWord(), W_1_O.prefix(3));
-        wb.clear();
+        Assert.assertTrue(incMoore.lookup(W_1.prefix(2)).getFirst());
+        Assert.assertEquals(incMoore.lookup(W_1.prefix(2)).getSecond(), W_1_O.prefix(3));
+
         Assert.assertFalse(incMoore.hasDefinitiveInformation(W_2));
         Assert.assertFalse(incMoore.hasDefinitiveInformation(W_3));
 
@@ -103,33 +103,31 @@ public abstract class AbstractIncrementalMooreBuilderTest {
         Assert.assertTrue(incMoore.hasDefinitiveInformation(W_2));
         Assert.assertFalse(incMoore.hasDefinitiveInformation(W_3));
 
-        Assert.assertTrue(incMoore.lookup(W_2, wb));
-        Assert.assertEquals(wb.toWord(), W_2_O);
-        wb.clear();
-        Assert.assertTrue(incMoore.lookup(W_2.prefix(1), wb));
-        Assert.assertEquals(wb.toWord(), W_2_O.prefix(2));
-        wb.clear();
-        Assert.assertTrue(incMoore.lookup(W_1, wb));
-        Assert.assertEquals(wb.toWord(), W_1_O);
-        wb.clear();
+        Assert.assertTrue(incMoore.lookup(W_2).getFirst());
+        Assert.assertEquals(incMoore.lookup(W_2).getSecond(), W_2_O);
+
+        Assert.assertTrue(incMoore.lookup(W_2.prefix(1)).getFirst());
+        Assert.assertEquals(incMoore.lookup(W_2.prefix(1)).getSecond(), W_2_O.prefix(2));
+
+        Assert.assertTrue(incMoore.lookup(W_1).getFirst());
+        Assert.assertEquals(incMoore.lookup(W_1).getSecond(), W_1_O);
 
         incMoore.insert(W_3, W_3_O);
         Assert.assertTrue(incMoore.hasDefinitiveInformation(W_1));
         Assert.assertTrue(incMoore.hasDefinitiveInformation(W_2));
         Assert.assertTrue(incMoore.hasDefinitiveInformation(W_3));
 
-        Assert.assertTrue(incMoore.lookup(W_3, wb));
-        Assert.assertEquals(wb.toWord(), W_3_O);
-        wb.clear();
-        Assert.assertTrue(incMoore.lookup(W_3.prefix(2), wb));
-        Assert.assertEquals(wb.toWord(), W_3_O.prefix(3));
-        wb.clear();
-        Assert.assertTrue(incMoore.lookup(W_1, wb));
-        Assert.assertEquals(wb.toWord(), W_1_O);
-        wb.clear();
-        Assert.assertTrue(incMoore.lookup(W_2, wb));
-        Assert.assertEquals(wb.toWord(), W_2_O);
-        wb.clear();
+        Assert.assertTrue(incMoore.lookup(W_3).getFirst());
+        Assert.assertEquals(incMoore.lookup(W_3).getSecond(), W_3_O);
+
+        Assert.assertTrue(incMoore.lookup(W_3.prefix(2)).getFirst());
+        Assert.assertEquals(incMoore.lookup(W_3.prefix(2)).getSecond(), W_3_O.prefix(3));
+
+        Assert.assertTrue(incMoore.lookup(W_1).getFirst());
+        Assert.assertEquals(incMoore.lookup(W_1).getSecond(), W_1_O);
+
+        Assert.assertTrue(incMoore.lookup(W_2).getFirst());
+        Assert.assertEquals(incMoore.lookup(W_2).getSecond(), W_2_O);
     }
 
     @Test(dependsOnMethods = "testLookup")
@@ -218,7 +216,8 @@ public abstract class AbstractIncrementalMooreBuilderTest {
 
     @Test
     public void testCounterexampleOfLengthOne() {
-        final IncrementalMooreBuilder<Character, Character> incMoore = createIncrementalMooreBuilder(TEST_ALPHABET);
+        final IncrementalConstruction.MooreBuilder<Character, Character> incMoore = createIncrementalMooreBuilder(
+                TEST_ALPHABET);
         incMoore.insert(Word.fromLetter('a'), Word.fromString("-x"));
 
         final CompactMoore<Character, Character> moore = new CompactMoore<>(TEST_ALPHABET);
@@ -234,7 +233,8 @@ public abstract class AbstractIncrementalMooreBuilderTest {
     @Test(dependsOnMethods = "testLookup")
     public void testNewInputSymbol() {
         final GrowingAlphabet<Character> alphabet = new GrowingMapAlphabet<>(TEST_ALPHABET);
-        final IncrementalMooreBuilder<Character, Character> growableBuilder = createIncrementalMooreBuilder(alphabet);
+        final IncrementalConstruction.MooreBuilder<Character, Character> growableBuilder = createIncrementalMooreBuilder(
+                alphabet);
 
         growableBuilder.addAlphabetSymbol('d');
         growableBuilder.addAlphabetSymbol('d');
@@ -245,14 +245,14 @@ public abstract class AbstractIncrementalMooreBuilderTest {
         growableBuilder.insert(input1, output1);
 
         Assert.assertTrue(growableBuilder.hasDefinitiveInformation(input1));
-        Assert.assertEquals(growableBuilder.lookup(input1), output1);
+        Assert.assertEquals(growableBuilder.lookup(input1).getSecond(), output1);
 
         growableBuilder.addAlphabetSymbol('e');
 
         final Word<Character> input2 = Word.fromString("ddee");
 
         Assert.assertFalse(growableBuilder.hasDefinitiveInformation(input2));
-        Assert.assertEquals(growableBuilder.lookup(input2), Word.fromString("-1"));
+        Assert.assertEquals(growableBuilder.lookup(input2).getSecond(), Word.fromString("-1"));
     }
 
 }

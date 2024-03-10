@@ -19,6 +19,8 @@ import net.automatalib.automaton.concept.Output;
 import net.automatalib.automaton.fsa.DFA;
 import net.automatalib.automaton.transducer.MealyMachine;
 import net.automatalib.automaton.transducer.MooreMachine;
+import net.automatalib.incremental.dfa.Acceptance;
+import net.automatalib.ts.UniversalDTS;
 import net.automatalib.word.Word;
 
 /**
@@ -37,10 +39,11 @@ public interface IncrementalConstruction<M extends Output<I, D>, I, D> extends C
 
     void insert(Word<? extends I> input, D output) throws ConflictException;
 
-    interface MealyBuilder<I, O> extends IncrementalConstruction<MealyMachine<?, I, ?, O>, I, Word<O>> {
+    interface MealyBuilder<I, O>
+            extends IncrementalConstruction<MealyMachine<?, I, ?, O>, I, Word<O>>, Construction.MealyBuilder<I, O> {
     }
 
-    interface DFABuilder<I> extends IncrementalConstruction<DFA<?, I>, I, Boolean> {
+    interface DFABuilder<I> extends IncrementalConstruction<DFA<?, I>, I, Boolean>, Construction.DFABuilder<I> {
         /**
          * Inserts a new word into the automaton. This is a convenience method
          * equivalent to invoking {@code insert(word,
@@ -60,6 +63,7 @@ public interface IncrementalConstruction<M extends Output<I, D>, I, D> extends C
 
     }
 
-    interface MooreBuilder<I, O> extends IncrementalConstruction<MooreMachine<?, I, ?, O>, I, Word<O>> {
+    interface MooreBuilder<I, O>
+            extends IncrementalConstruction<MooreMachine<?, I, ?, O>, I, Word<O>>, Construction.MooreBuilder<I, O> {
     }
 }

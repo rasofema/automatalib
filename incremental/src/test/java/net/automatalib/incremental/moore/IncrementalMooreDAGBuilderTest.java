@@ -20,6 +20,7 @@ import java.util.List;
 
 import net.automatalib.alphabet.Alphabet;
 import net.automatalib.common.util.Pair;
+import net.automatalib.incremental.IncrementalConstruction;
 import net.automatalib.incremental.IntegrationUtil;
 import net.automatalib.incremental.IntegrationUtil.ParsedTraces;
 import net.automatalib.incremental.mealy.IncrementalMealyDAGBuilderTest;
@@ -32,7 +33,7 @@ import org.testng.annotations.Test;
 public class IncrementalMooreDAGBuilderTest extends AbstractIncrementalMooreBuilderTest {
 
     @Override
-    protected <I, O> IncrementalMooreBuilder<I, O> createIncrementalMooreBuilder(Alphabet<I> alphabet) {
+    protected <I, O> IncrementalConstruction.MooreBuilder<I, O> createIncrementalMooreBuilder(Alphabet<I> alphabet) {
         return new IncrementalMooreDAGBuilder<>(alphabet);
     }
 
@@ -63,7 +64,7 @@ public class IncrementalMooreDAGBuilderTest extends AbstractIncrementalMooreBuil
         final List<Pair<Word<Integer>, Word<Integer>>> traces = parsedData.traces;
         final int initOut = -1;
 
-        final IncrementalMooreBuilder<Integer, Integer> cache = createIncrementalMooreBuilder(alphabet);
+        final IncrementalConstruction.MooreBuilder<Integer, Integer> cache = createIncrementalMooreBuilder(alphabet);
 
         // test insertion without errors
         for (Pair<Word<Integer>, Word<Integer>> trace : traces) {
@@ -73,7 +74,7 @@ public class IncrementalMooreDAGBuilderTest extends AbstractIncrementalMooreBuil
 
             cache.insert(input, value);
             // test direct caching behavior
-            Assert.assertEquals(value, cache.lookup(input));
+            Assert.assertEquals(value, cache.lookup(input).getSecond());
         }
 
         // test global caching behavior
@@ -82,7 +83,7 @@ public class IncrementalMooreDAGBuilderTest extends AbstractIncrementalMooreBuil
             // prepend with fixed output symbol for Moore semantics
             final Word<Integer> value = trace.getSecond().prepend(initOut);
 
-            Assert.assertEquals(value, cache.lookup(input));
+            Assert.assertEquals(value, cache.lookup(input).getSecond());
         }
     }
 }

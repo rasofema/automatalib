@@ -20,6 +20,7 @@ import java.util.List;
 
 import net.automatalib.alphabet.Alphabet;
 import net.automatalib.common.util.Pair;
+import net.automatalib.incremental.IncrementalConstruction;
 import net.automatalib.incremental.IntegrationUtil;
 import net.automatalib.incremental.IntegrationUtil.ParsedTraces;
 import net.automatalib.incremental.dfa.dag.IncrementalDFADAGBuilder;
@@ -31,7 +32,7 @@ import org.testng.annotations.Test;
 public class IncrementalDFADAGBuilderTest extends AbstractIncrementalDFABuilderTest {
 
     @Override
-    protected <I> IncrementalDFABuilder<I> createIncrementalDFABuilder(Alphabet<I> alphabet) {
+    protected <I> IncrementalConstruction.DFABuilder<I> createIncrementalDFABuilder(Alphabet<I> alphabet) {
         return new IncrementalDFADAGBuilder<>(alphabet);
     }
 
@@ -62,7 +63,7 @@ public class IncrementalDFADAGBuilderTest extends AbstractIncrementalDFABuilderT
         final Alphabet<Integer> alphabet = parsedData.alphabet;
         final List<Pair<Word<Integer>, Boolean>> traces = parsedData.traces;
 
-        final IncrementalDFABuilder<Integer> cache = createIncrementalDFABuilder(alphabet);
+        final IncrementalConstruction.DFABuilder<Integer> cache = createIncrementalDFABuilder(alphabet);
 
         // test insertion without errors
         for (Pair<Word<Integer>, Boolean> trace : traces) {
@@ -71,7 +72,7 @@ public class IncrementalDFADAGBuilderTest extends AbstractIncrementalDFABuilderT
 
             cache.insert(input, value);
             // test direct caching behavior
-            Assert.assertEquals(value, cache.lookup(input).toBoolean());
+            Assert.assertEquals(value, cache.lookup(input).getSecond());
         }
 
         // test global caching behavior
@@ -79,7 +80,7 @@ public class IncrementalDFADAGBuilderTest extends AbstractIncrementalDFABuilderT
             final Word<Integer> input = trace.getFirst();
             final boolean value = trace.getSecond();
 
-            Assert.assertEquals(value, cache.lookup(input).toBoolean());
+            Assert.assertEquals(value, cache.lookup(input).getSecond());
         }
     }
 

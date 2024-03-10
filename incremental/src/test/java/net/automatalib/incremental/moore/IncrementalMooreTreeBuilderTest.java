@@ -16,6 +16,7 @@
 package net.automatalib.incremental.moore;
 
 import net.automatalib.alphabet.Alphabet;
+import net.automatalib.incremental.IncrementalConstruction;
 import net.automatalib.incremental.moore.tree.IncrementalMooreTreeBuilder;
 import org.testng.annotations.Test;
 
@@ -23,7 +24,7 @@ import org.testng.annotations.Test;
 public class IncrementalMooreTreeBuilderTest extends AbstractIncrementalMooreBuilderTest {
 
     @Override
-    protected <I, O> IncrementalMooreBuilder<I, O> createIncrementalMooreBuilder(Alphabet<I> alphabet) {
+    protected <I, O> IncrementalConstruction.MooreBuilder<I, O> createIncrementalMooreBuilder(Alphabet<I> alphabet) {
         return new IncrementalMooreTreeBuilder<>(alphabet);
     }
 

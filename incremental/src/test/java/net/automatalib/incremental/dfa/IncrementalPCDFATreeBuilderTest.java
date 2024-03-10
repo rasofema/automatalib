@@ -16,6 +16,7 @@
 package net.automatalib.incremental.dfa;
 
 import net.automatalib.alphabet.Alphabet;
+import net.automatalib.incremental.IncrementalConstruction;
 import net.automatalib.incremental.dfa.tree.IncrementalPCDFATreeBuilder;
 import org.testng.annotations.Test;
 
@@ -23,7 +24,7 @@ import org.testng.annotations.Test;
 public class IncrementalPCDFATreeBuilderTest extends AbstractIncrementalPCDFABuilderTest {
 
     @Override
-    protected <I> IncrementalDFABuilder<I> createIncrementalPCDFABuilder(Alphabet<I> alphabet) {
+    protected <I> IncrementalConstruction.DFABuilder<I> createIncrementalPCDFABuilder(Alphabet<I> alphabet) {
         return new IncrementalPCDFATreeBuilder<>(alphabet);
     }
 

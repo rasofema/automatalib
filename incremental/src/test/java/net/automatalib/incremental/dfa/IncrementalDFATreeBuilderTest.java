@@ -16,6 +16,7 @@
 package net.automatalib.incremental.dfa;
 
 import net.automatalib.alphabet.Alphabet;
+import net.automatalib.incremental.IncrementalConstruction;
 import net.automatalib.incremental.dfa.tree.IncrementalDFATreeBuilder;
 import org.testng.annotations.Test;
 
@@ -23,7 +24,7 @@ import org.testng.annotations.Test;
 public class IncrementalDFATreeBuilderTest extends AbstractIncrementalDFABuilderTest {
 
     @Override
-    protected <I> IncrementalDFABuilder<I> createIncrementalDFABuilder(Alphabet<I> alphabet) {
+    protected <I> IncrementalConstruction.DFABuilder<I> createIncrementalDFABuilder(Alphabet<I> alphabet) {
         return new IncrementalDFATreeBuilder<>(alphabet);
     }
 

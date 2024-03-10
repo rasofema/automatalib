@@ -21,11 +21,14 @@ import net.automatalib.alphabet.SupportsGrowingAlphabet;
 import net.automatalib.automaton.concept.Output;
 import net.automatalib.automaton.fsa.DFA;
 import net.automatalib.automaton.transducer.MealyMachine;
+import net.automatalib.automaton.transducer.MooreMachine;
 import net.automatalib.common.util.Pair;
 import net.automatalib.graph.Graph;
+import net.automatalib.incremental.dfa.Acceptance;
 import net.automatalib.ts.DeterministicTransitionSystem;
 import net.automatalib.ts.UniversalDTS;
 import net.automatalib.ts.output.MealyTransitionSystem;
+import net.automatalib.ts.output.MooreTransitionSystem;
 import net.automatalib.word.Word;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -130,6 +133,12 @@ public interface Construction<A extends Output<I, D>, I, D> extends SupportsGrow
     interface DFABuilder<I> extends Construction<DFA<?, I>, I, Boolean> {
 
         @Override
-        UniversalDTS<?, I, ?, Boolean, Void> asTransitionSystem();
+        UniversalDTS<?, I, ?, Acceptance, Void> asTransitionSystem();
+    }
+
+    interface MooreBuilder<I, O> extends Construction<MooreMachine<?, I, ?, O>, I, Word<O>> {
+
+        @Override
+        MooreTransitionSystem<?, I, ?, O> asTransitionSystem();
     }
 }
