@@ -19,7 +19,12 @@ import java.util.Collection;
 
 import net.automatalib.automaton.UniversalDeterministicAutomaton;
 import net.automatalib.automaton.concept.DetSuffixOutputAutomaton;
+import net.automatalib.automaton.graph.TransitionEdge;
+import net.automatalib.automaton.graph.UniversalAutomatonGraphView;
+import net.automatalib.automaton.visualization.FSAVisualizationHelper;
+import net.automatalib.graph.UniversalGraph;
 import net.automatalib.ts.acceptor.DeterministicAcceptorTS;
+import net.automatalib.visualization.VisualizationHelper;
 
 /**
  * Deterministic finite state acceptor.
@@ -54,5 +59,23 @@ public interface DFA<S, I> extends UniversalDeterministicAutomaton<S, I, S, Bool
     @Override
     default boolean isAccepting(Collection<? extends S> states) {
         return DeterministicAcceptorTS.super.isAccepting(states);
+    }
+
+    @Override
+    default UniversalGraph<S, TransitionEdge<I, S>, Boolean, TransitionEdge.Property<I, Void>> transitionGraphView(Collection<? extends I> inputs) {
+        return new DFAGraphView<>(this, inputs);
+    }
+
+    class DFAGraphView<S, I, A extends DFA<S, I>>
+            extends UniversalAutomatonGraphView<S, I, S, Boolean, Void, A> {
+
+        public DFAGraphView(A automaton, Collection<? extends I> inputs) {
+            super(automaton, inputs);
+        }
+
+        @Override
+        public VisualizationHelper<S, TransitionEdge<I, S>> getVisualizationHelper() {
+            return new FSAVisualizationHelper<>(automaton);
+        }
     }
 }

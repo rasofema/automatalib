@@ -21,26 +21,10 @@ import java.util.Deque;
 import java.util.Iterator;
 
 import net.automatalib.alphabet.Alphabet;
-import net.automatalib.automaton.UniversalAutomaton;
-import net.automatalib.automaton.fsa.DFA;
-import net.automatalib.automaton.graph.TransitionEdge;
-import net.automatalib.automaton.graph.UniversalAutomatonGraphView;
-import net.automatalib.common.util.Pair;
-import net.automatalib.common.util.collection.IteratorUtil;
-import net.automatalib.common.util.mapping.MapMapping;
-import net.automatalib.common.util.mapping.MutableMapping;
-import net.automatalib.graph.Graph;
 import net.automatalib.incremental.ConflictException;
-import net.automatalib.incremental.dfa.AbstractIncrementalDFABuilder;
-import net.automatalib.incremental.dfa.AbstractVisualizationHelper;
+import net.automatalib.incremental.IncrementalConstruction;
 import net.automatalib.incremental.dfa.Acceptance;
-import net.automatalib.ts.UniversalDTS;
-import net.automatalib.util.ts.traversal.TSTraversal;
-import net.automatalib.visualization.VisualizationHelper;
 import net.automatalib.word.Word;
-import net.automatalib.word.WordBuilder;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Incrementally builds a tree, from a set of positive and negative words. Using {@link #insert(Word, boolean)}, either
@@ -52,118 +36,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @param <I>
  *         input symbol class
  */
-public class IncrementalDFATreeBuilder<I> extends AbstractIncrementalDFABuilder<I> {
+public class IncrementalDFATreeBuilder<I> extends AbstractAlphabetBasedDFATreeBuilder<I>
+        implements IncrementalConstruction.DFABuilder<I>  {
 
-    final Node root;
 
     public IncrementalDFATreeBuilder(Alphabet<I> inputAlphabet) {
         super(inputAlphabet);
-        this.root = new Node();
-    }
-
-    @Override
-    public void addAlphabetSymbol(I symbol) {
-        final int oldSize = alphabetSize;
-        super.addAlphabetSymbol(symbol);
-        final int newSize = alphabetSize;
-
-        if (oldSize < newSize) {
-            ensureInputCapacity(root, oldSize, newSize);
-        }
-    }
-
-    private void ensureInputCapacity(Node node, int oldAlphabetSize, int newAlphabetSize) {
-        node.ensureInputCapacity(newAlphabetSize);
-        for (int i = 0; i < oldAlphabetSize; i++) {
-            final Node child = node.getChild(i);
-            if (child != null) {
-                ensureInputCapacity(child, oldAlphabetSize, newAlphabetSize);
-            }
-        }
-    }
-
-    @Override
-    public @Nullable Word<I> findSeparatingWord(DFA<?, I> target,
-                                                Collection<? extends I> inputs,
-                                                boolean omitUndefined) {
-        return doFindSeparatingWord(target, inputs, omitUndefined);
-    }
-
-    <S> @Nullable Word<I> doFindSeparatingWord(DFA<S, I> target,
-                                               Collection<? extends I> inputs,
-                                               boolean omitUndefined) {
-        S automatonInit = target.getInitialState();
-
-        if (automatonInit == null) {
-            return omitUndefined ? null : Word.epsilon();
-        }
-
-        if (root.getAcceptance().conflicts(target.isAccepting(automatonInit))) {
-            return Word.epsilon();
-        }
-
-        // incomingInput can be null here, because we will always skip the bottom stack element below
-        @SuppressWarnings("nullness")
-        Record<@Nullable S, I> init = new Record<>(automatonInit, root, null, inputs.iterator());
-
-        Deque<Record<@Nullable S, I>> dfsStack = new ArrayDeque<>();
-        dfsStack.push(init);
-
-        while (!dfsStack.isEmpty()) {
-            @SuppressWarnings("nullness") // false positive https://github.com/typetools/checker-framework/issues/399
-            @NonNull Record<@Nullable S, I> rec = dfsStack.peek();
-            if (!rec.inputIt.hasNext()) {
-                dfsStack.pop();
-                continue;
-            }
-            I input = rec.inputIt.next();
-            int inputIdx = inputAlphabet.getSymbolIndex(input);
-
-            Node succ = rec.treeNode.getChild(inputIdx);
-            if (succ == null) {
-                continue;
-            }
-
-            @Nullable S state = rec.automatonState;
-            @Nullable S automatonSucc = state == null ? null : target.getTransition(state, input);
-            if (automatonSucc == null && omitUndefined) {
-                continue;
-            }
-
-            boolean succAcc = automatonSucc != null && target.isAccepting(automatonSucc);
-
-            if (succ.getAcceptance().conflicts(succAcc)) {
-                WordBuilder<I> wb = new WordBuilder<>(dfsStack.size());
-                wb.append(input);
-
-                dfsStack.pop();
-                while (!dfsStack.isEmpty()) {
-                    wb.append(rec.incomingInput);
-                    rec = dfsStack.pop();
-                }
-                return wb.reverse().toWord();
-            }
-
-            dfsStack.push(new Record<>(automatonSucc, succ, input, inputs.iterator()));
-        }
-
-        return null;
-    }
-
-    @Override
-    public Pair<Boolean, Boolean> lookup(Word<? extends I> inputWord) {
-        Node curr = root;
-
-        for (I sym : inputWord) {
-            int symIdx = inputAlphabet.getSymbolIndex(sym);
-            Node succ = curr.getChild(symIdx);
-            if (succ == null) {
-                return Pair.of(false, null);
-            }
-            curr = succ;
-        }
-        Boolean out = curr.getAcceptance() == Acceptance.DONT_KNOW ? null : curr.getAcceptance().toBoolean();
-        return Pair.of(out != null, out);
     }
 
     @Override
@@ -171,11 +49,11 @@ public class IncrementalDFATreeBuilder<I> extends AbstractIncrementalDFABuilder<
         Node curr = root;
 
         for (I sym : word) {
-            int inputIdx = inputAlphabet.getSymbolIndex(sym);
+            int inputIdx = getInputIndex(sym);
             Node succ = curr.getChild(inputIdx);
             if (succ == null) {
                 succ = new Node();
-                curr.setChild(inputIdx, alphabetSize, succ);
+                curr.setChild(inputIdx, getInputAlphabetSize(), succ);
             }
             curr = succ;
         }
@@ -187,88 +65,6 @@ public class IncrementalDFATreeBuilder<I> extends AbstractIncrementalDFABuilder<
         } else if (acc != newWordAcc) {
             throw new ConflictException(
                     "Conflicting acceptance values for word " + word + ": " + acc + " vs " + newWordAcc);
-        }
-    }
-
-    @Override
-    public UniversalDTS<?, I, ?, Acceptance, Void> asTransitionSystem() {
-        return new TransitionSystemView();
-    }
-
-    @Override
-    public Graph<?, ?> asGraph() {
-        return new UniversalAutomatonGraphView<Node, I, Node, Acceptance, Void, TransitionSystemView>(new TransitionSystemView(),
-                                                                                                      inputAlphabet) {
-
-            @Override
-            public VisualizationHelper<Node, TransitionEdge<I, Node>> getVisualizationHelper() {
-                return new AbstractVisualizationHelper<Node, I, Node, TransitionSystemView>(automaton) {
-
-                    @Override
-                    public Acceptance getAcceptance(Node node) {
-                        return node.getAcceptance();
-                    }
-                };
-            }
-        };
-    }
-
-    static final class Record<S, I> {
-
-        public final S automatonState;
-        public final Node treeNode;
-        public final I incomingInput;
-        public final Iterator<? extends I> inputIt;
-
-        Record(S automatonState, Node treeNode, I incomingInput, Iterator<? extends I> inputIt) {
-            this.automatonState = automatonState;
-            this.treeNode = treeNode;
-            this.incomingInput = incomingInput;
-            this.inputIt = inputIt;
-        }
-    }
-
-    class TransitionSystemView implements UniversalDTS<Node, I, Node, Acceptance, Void>,
-                                          UniversalAutomaton<Node, I, Node, Acceptance, Void> {
-
-        @Override
-        public Node getSuccessor(Node transition) {
-            return transition;
-        }
-
-        @Override
-        public @Nullable Node getTransition(Node state, I input) {
-            int inputIdx = inputAlphabet.getSymbolIndex(input);
-            return state.getChild(inputIdx);
-        }
-
-        @Override
-        public Node getInitialState() {
-            return root;
-        }
-
-        @Override
-        public Acceptance getStateProperty(Node state) {
-            return state.getAcceptance();
-        }
-
-        @Override
-        public Void getTransitionProperty(Node transition) {
-            return null;
-        }
-
-        @Override
-        public Collection<Node> getStates() {
-            return IteratorUtil.list(TSTraversal.breadthFirstIterator(this, inputAlphabet));
-        }
-
-        /*
-         * We need to override the default MooreMachine mapping, because its StateIDStaticMapping class requires our
-         * nodeIDs, which requires our states, which requires our nodeIDs, which requires ... infinite loop!
-         */
-        @Override
-        public <V> MutableMapping<Node, V> createStaticStateMapping() {
-            return new MapMapping<>();
         }
     }
 

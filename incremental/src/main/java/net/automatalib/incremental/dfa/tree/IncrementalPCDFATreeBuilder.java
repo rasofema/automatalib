@@ -30,7 +30,6 @@ import net.automatalib.graph.Graph;
 import net.automatalib.incremental.ConflictException;
 import net.automatalib.incremental.dfa.AbstractVisualizationHelper;
 import net.automatalib.incremental.dfa.Acceptance;
-import net.automatalib.ts.UniversalDTS;
 import net.automatalib.visualization.VisualizationHelper;
 import net.automatalib.word.Word;
 import net.automatalib.word.WordBuilder;
@@ -90,7 +89,7 @@ public class IncrementalPCDFATreeBuilder<I> extends IncrementalDFATreeBuilder<I>
                 continue;
             }
             I input = rec.inputIt.next();
-            int inputIdx = inputAlphabet.getSymbolIndex(input);
+            int inputIdx = getInputIndex(input);
 
             Node succ = rec.treeNode.getChild(inputIdx);
             if (succ == null) {
@@ -145,7 +144,7 @@ public class IncrementalPCDFATreeBuilder<I> extends IncrementalDFATreeBuilder<I>
                 return Pair.of(true, false);
             }
 
-            int symIdx = inputAlphabet.getSymbolIndex(sym);
+            int symIdx = getInputIndex(sym);
             Node succ = curr.getChild(symIdx);
             if (succ == null) {
                 return Pair.of(false, null);
@@ -166,14 +165,9 @@ public class IncrementalPCDFATreeBuilder<I> extends IncrementalDFATreeBuilder<I>
     }
 
     @Override
-    public UniversalDTS<?, I, ?, Acceptance, Void> asTransitionSystem() {
-        return new TransitionSystemView();
-    }
-
-    @Override
-    public Graph<?, ?> asGraph() {
+    public Graph<Node, ?> asGraph() {
         return new UniversalAutomatonGraphView<Node, I, Node, Acceptance, Void, TransitionSystemView>(new TransitionSystemView(),
-                                                                                                      inputAlphabet) {
+                getInputAlphabet()) {
 
             @Override
             public VisualizationHelper<Node, TransitionEdge<I, Node>> getVisualizationHelper() {
@@ -198,11 +192,11 @@ public class IncrementalPCDFATreeBuilder<I> extends IncrementalDFATreeBuilder<I>
                                             ": found FALSE, expected DONT_KNOW or TRUE");
             }
             curr.setAcceptance(Acceptance.TRUE);
-            int symIdx = inputAlphabet.getSymbolIndex(sym);
+            int symIdx = getInputIndex(sym);
             Node succ = curr.getChild(symIdx);
             if (succ == null) {
                 succ = new Node(Acceptance.TRUE);
-                curr.setChild(symIdx, alphabetSize, succ);
+                curr.setChild(symIdx, getInputAlphabetSize(), succ);
             }
             curr = succ;
             idx++;
@@ -223,11 +217,11 @@ public class IncrementalPCDFATreeBuilder<I> extends IncrementalDFATreeBuilder<I>
             if (curr.getAcceptance() == Acceptance.FALSE) {
                 return; // done!
             }
-            int symIdx = inputAlphabet.getSymbolIndex(sym);
+            int symIdx = getInputIndex(sym);
             Node succ = curr.getChild(symIdx);
             if (succ == null) {
                 succ = new Node(Acceptance.DONT_KNOW);
-                curr.setChild(symIdx, alphabetSize, succ);
+                curr.setChild(symIdx, getInputAlphabetSize(), succ);
             }
             prev = curr;
             curr = succ;
@@ -247,7 +241,7 @@ public class IncrementalPCDFATreeBuilder<I> extends IncrementalDFATreeBuilder<I>
             root.makeSink();
         } else {
             Node sink = getSink();
-            prev.setChild(lastSymIdx, alphabetSize, sink);
+            prev.setChild(lastSymIdx, getInputAlphabetSize(), sink);
         }
     }
 
@@ -330,7 +324,7 @@ public class IncrementalPCDFATreeBuilder<I> extends IncrementalDFATreeBuilder<I>
         }
     }
 
-    private class TransitionSystemView extends IncrementalDFATreeBuilder<I>.TransitionSystemView {
+    private class TransitionSystemView extends AbstractDFATreeBuilder<I>.TransitionSystemViewAccept {
 
         @Override
         public @Nullable Node getTransition(Node state, I input) {
