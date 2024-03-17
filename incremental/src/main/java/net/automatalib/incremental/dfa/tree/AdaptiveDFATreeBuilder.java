@@ -62,7 +62,10 @@ public class AdaptiveDFATreeBuilder<I> extends AbstractAlphabetBasedDFATreeBuild
         } else if (acc != newWordAcc) {
             hasOverwritten = true;
             removeQueries(curr);
-            if (prev != null) {
+            if (prev == null) {
+                assert word.isEmpty();
+                root.setAcceptance(newWordAcc);
+            } else {
                 prev.setChild(childIndex, getInputAlphabetSize(), null);
                 curr = insertNode(prev, childInput, acceptance);
             }

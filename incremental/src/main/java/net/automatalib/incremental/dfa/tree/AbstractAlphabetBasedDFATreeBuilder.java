@@ -17,21 +17,12 @@ package net.automatalib.incremental.dfa.tree;
 
 import net.automatalib.alphabet.Alphabet;
 import net.automatalib.automaton.concept.InputAlphabetHolder;
-import net.automatalib.automaton.fsa.DFA;
 import net.automatalib.automaton.graph.TransitionEdge;
 import net.automatalib.automaton.graph.UniversalAutomatonGraphView;
-import net.automatalib.automaton.visualization.FSAVisualizationHelper;
-import net.automatalib.common.util.collection.IteratorUtil;
-import net.automatalib.common.util.mapping.MapMapping;
-import net.automatalib.common.util.mapping.MutableMapping;
 import net.automatalib.graph.Graph;
 import net.automatalib.incremental.dfa.AbstractVisualizationHelper;
 import net.automatalib.incremental.dfa.Acceptance;
-import net.automatalib.util.ts.traversal.TSTraversal;
-import net.automatalib.automaton.fsa.DFA.DFAGraphView;
 import net.automatalib.visualization.VisualizationHelper;
-
-import java.util.Collection;
 
 abstract class AbstractAlphabetBasedDFATreeBuilder<I> extends AbstractDFATreeBuilder<I>
         implements InputAlphabetHolder<I> {
