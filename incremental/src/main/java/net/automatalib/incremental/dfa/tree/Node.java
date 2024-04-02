@@ -16,6 +16,7 @@
 package net.automatalib.incremental.dfa.tree;
 
 import net.automatalib.common.util.array.ResizingArrayStorage;
+import net.automatalib.incremental.CexOrigin;
 import net.automatalib.incremental.dfa.Acceptance;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -26,12 +27,14 @@ final class Node {
 
     private Acceptance acceptance;
     private @Nullable ResizingArrayStorage<Node> children;
+    private CexOrigin origin;
 
     /**
      * Constructor. Constructs a new node with no children and an acceptance value of {@link Acceptance#DONT_KNOW}
      */
     Node() {
         this(Acceptance.DONT_KNOW);
+        this.origin = CexOrigin.UNKNOWN;
     }
 
     /**
@@ -61,6 +64,14 @@ final class Node {
      */
     void setAcceptance(Acceptance acceptance) {
         this.acceptance = acceptance;
+    }
+
+    public CexOrigin getOrigin() {
+        return this.origin;
+    }
+
+    public void setOrigin(CexOrigin origin) {
+        this.origin = origin;
     }
 
     /**

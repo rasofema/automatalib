@@ -22,6 +22,10 @@ public interface AdaptiveConstruction<M extends Output<I, D>, I, D> extends Cons
      */
     boolean insert(Word<? extends I> input, D output);
 
+    default boolean insertFromUser(Word<? extends I> input, D output) {
+        throw new UnsupportedOperationException();
+    }
+
     /**
      * Returns the oldest, non-overridden input that has been introduced and
      * persisted.

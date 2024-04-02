@@ -17,6 +17,7 @@ package net.automatalib.incremental.dfa.tree;
 
 import net.automatalib.alphabet.Alphabet;
 import net.automatalib.incremental.AdaptiveConstruction;
+import net.automatalib.incremental.CexOrigin;
 import net.automatalib.incremental.dfa.Acceptance;
 import net.automatalib.util.graph.traversal.GraphTraversal;
 import net.automatalib.word.Word;
@@ -32,8 +33,7 @@ public class AdaptiveDFATreeBuilder<I> extends AbstractAlphabetBasedDFATreeBuild
         this.nodeToQuery = new LinkedHashMap<>();
     }
 
-    @Override
-    public boolean insert(Word<? extends I> word, Boolean acceptance) {
+    private boolean insert(Word<? extends I> word, Boolean acceptance, CexOrigin origin) {
         Node prev = null;
         int childIndex = -1;
         I childInput = null;
@@ -60,14 +60,19 @@ public class AdaptiveDFATreeBuilder<I> extends AbstractAlphabetBasedDFATreeBuild
         if (acc == Acceptance.DONT_KNOW) {
             curr.setAcceptance(newWordAcc);
         } else if (acc != newWordAcc) {
-            hasOverwritten = true;
-            removeQueries(curr);
-            if (prev == null) {
-                assert word.isEmpty();
-                root.setAcceptance(newWordAcc);
-            } else {
-                prev.setChild(childIndex, getInputAlphabetSize(), null);
-                curr = insertNode(prev, childInput, acceptance);
+//          Only update if from same origin or, otherwise, origin of curr is not user
+            if (origin == curr.getOrigin() || curr.getOrigin() != CexOrigin.USER) {
+                hasOverwritten = true;
+                removeQueries(curr);
+                if (prev == null) {
+                    assert word.isEmpty();
+                    root.setAcceptance(newWordAcc);
+                    root.setOrigin(origin);
+                } else {
+                    prev.setChild(childIndex, getInputAlphabetSize(), null);
+                    curr = insertNode(prev, childInput, acceptance);
+                    curr.setOrigin(origin);
+                }
             }
         }
 
@@ -77,6 +82,19 @@ public class AdaptiveDFATreeBuilder<I> extends AbstractAlphabetBasedDFATreeBuild
 
         return hasOverwritten;
     }
+
+
+    @Override
+    public boolean insert(Word<? extends I> word, Boolean acceptance) {
+        return insert(word, acceptance, CexOrigin.SUL);
+    }
+
+    @Override
+    public boolean insertFromUser(Word<? extends I> word, Boolean acceptance) {
+        return insert(word, acceptance, CexOrigin.USER);
+    }
+
+
 
 
     private void removeQueries(Node node) {
