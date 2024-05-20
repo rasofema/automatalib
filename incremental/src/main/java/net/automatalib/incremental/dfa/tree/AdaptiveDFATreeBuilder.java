@@ -34,9 +34,6 @@ public class AdaptiveDFATreeBuilder<I> extends AbstractAlphabetBasedDFATreeBuild
     }
 
     private boolean insert(Word<? extends I> word, Boolean acceptance, CexOrigin origin) {
-        Node prev = null;
-        int childIndex = -1;
-        I childInput = null;
         Node curr = root;
         boolean hasOverwritten = false;
 
@@ -47,9 +44,6 @@ public class AdaptiveDFATreeBuilder<I> extends AbstractAlphabetBasedDFATreeBuild
                 succ = new Node();
                 curr.setChild(inputIdx, getInputAlphabetSize(), succ);
             }
-            prev = curr;
-            childIndex = inputIdx;
-            childInput = sym;
             curr = succ;
         }
 
